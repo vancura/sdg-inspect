@@ -47,19 +47,6 @@ export function InputActions(): React.ReactElement {
         fileInputRef.current?.click();
     };
 
-    /** Handle paste from clipboard. */
-    const handlePaste = async (): Promise<void> => {
-        // Read the text from the clipboard.
-        const text = await navigator.clipboard.readText();
-
-        // If there is text, set the content.
-        if (text) {
-            setContent(text);
-        } else {
-            alert('No text found in clipboard');
-        }
-    };
-
     /** Handle pasting example.jsonl content. */
     const handlePasteTestFile = async (): Promise<void> => {
         try {
@@ -98,11 +85,11 @@ export function InputActions(): React.ReactElement {
     };
 
     return (
-        <div className="mb-4 flex items-center justify-center gap-4">
-            <h1 className="mr-4 text-2xl font-light">SDG Inspect</h1>
+        <div className="mb-4 flex items-center justify-center gap-2">
+            <h1 className="mr-2 text-2xl font-light">SDG Inspect</h1>
 
             <Button
-                label="Upload SDG"
+                label="Upload"
                 icon="upload-square-outline"
                 onClick={handleUploadClick}
                 isDisabled={hasContent}
@@ -110,29 +97,20 @@ export function InputActions(): React.ReactElement {
             />
 
             <Button
-                label="Paste from Clipboard"
-                icon="clipboard-outline"
-                onClick={handlePaste}
-                isDisabled={hasContent}
-                className={hasContent ? 'cursor-not-allowed opacity-50' : ''}
-            />
-
-            <Button
-                label="Paste @example.jsonl"
+                label="Example"
                 icon="document-text-outline"
                 onClick={handlePasteTestFile}
                 isDisabled={hasContent}
                 className={hasContent ? 'cursor-not-allowed opacity-50' : ''}
             />
 
-            {hasContent && (
-                <Button
-                    label="Clear"
-                    icon="trash-bin-trash-outline"
-                    onClick={handleClear}
-                    className="bg-red-600 hover:bg-red-700 focus:ring-red-500"
-                />
-            )}
+            <Button
+                label=""
+                icon="trash-bin-trash-outline"
+                onClick={handleClear}
+                isDisabled={!hasContent}
+                className="bg-red-600 hover:bg-red-700 focus:ring-red-500"
+            />
 
             <input ref={fileInputRef} type="file" accept=".jsonl" className="hidden" onChange={handleFileUpload} />
         </div>
