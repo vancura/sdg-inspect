@@ -60,6 +60,28 @@ export function InputActions(): React.ReactElement {
         }
     };
 
+    /** Handle pasting example.jsonl content. */
+    const handlePasteTestFile = async (): Promise<void> => {
+        try {
+            const response = await fetch('/example.jsonl');
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch example.jsonl: ${response.status} ${response.statusText}`);
+            }
+
+            const text = await response.text();
+
+            if (text) {
+                setContent(text);
+            } else {
+                alert('No content found in example.jsonl file');
+            }
+        } catch (error) {
+            console.error('Error loading example.jsonl:', error);
+            alert(`Failed to load example.jsonl: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    };
+
     /** Handle clear operation. */
     const handleClear = (): void => {
         // First dispatch a reset event to notify components.
@@ -91,6 +113,14 @@ export function InputActions(): React.ReactElement {
                 label="Paste from Clipboard"
                 icon="clipboard-outline"
                 onClick={handlePaste}
+                isDisabled={hasContent}
+                className={hasContent ? 'cursor-not-allowed opacity-50' : ''}
+            />
+
+            <Button
+                label="Paste @example.jsonl"
+                icon="document-text-outline"
+                onClick={handlePasteTestFile}
                 isDisabled={hasContent}
                 className={hasContent ? 'cursor-not-allowed opacity-50' : ''}
             />
