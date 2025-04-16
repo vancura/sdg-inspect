@@ -1,0 +1,9 @@
+{
+    "name": "SDG Inspect",
+    "short_name": "SDG Inspect",
+    "description": "Tool for analyzing SDG JSONL files.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#4285f4"
+}

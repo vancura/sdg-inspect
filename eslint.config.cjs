@@ -219,7 +219,12 @@ module.exports = [
                 tsconfigRootDir: process.cwd()
             },
             ecmaVersion: 'latest',
-            sourceType: 'module'
+            sourceType: 'module',
+            globals: {
+                document: 'readonly',
+                window: 'readonly',
+                navigator: 'readonly'
+            }
         }
     },
 

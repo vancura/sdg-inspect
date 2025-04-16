@@ -399,6 +399,33 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@iconify-json/solar@npm:^1.2.2":
+  version: 1.2.2
+  resolution: "@iconify-json/solar@npm:1.2.2"
+  dependencies:
+    "@iconify/types": "npm:*"
+  checksum: 10c0/7d8eb831fd561d199e5888c4129dfa4e97a1a4365dedc76363853590aef107c0937dd9b7d62ddd7fff715488959ba88b3211580b96d489728f6434a3f6a9a3ab
+  languageName: node
+  linkType: hard
+
+"@iconify/react@npm:^5.2.1":
+  version: 5.2.1
+  resolution: "@iconify/react@npm:5.2.1"
+  dependencies:
+    "@iconify/types": "npm:^2.0.0"
+  peerDependencies:
+    react: ">=16"
+  checksum: 10c0/aafd1b170de7d83a4d36d5ae3d5fa38384020858a2147d7e9d9f88a066ea57eed754fa48d393967052a38414df175013007555a4cf5840c98ca1b23cf955cf65
+  languageName: node
+  linkType: hard
+
+"@iconify/types@npm:*, @iconify/types@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@iconify/types@npm:2.0.0"
+  checksum: 10c0/65a3be43500c7ccacf360e136d00e1717f050b7b91da644e94370256ac66f582d59212bdb30d00788aab4fc078262e91c95b805d1808d654b72f6d2072a7e4b2
+  languageName: node
+  linkType: hard
+
 "@img/sharp-darwin-arm64@npm:0.33.5":
   version: 0.33.5
   resolution: "@img/sharp-darwin-arm64@npm:0.33.5"
@@ -831,6 +858,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nanostores/react@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@nanostores/react@npm:1.0.0"
+  peerDependencies:
+    nanostores: ^0.9.0 || ^0.10.0 || ^0.11.0 || ^1.0.0
+    react: ">=18.0.0"
+  checksum: 10c0/a7b1e89acf478f0a7d7b21208163ffd3c0d11e2fbd41ec112ac43866824bd7b245617c7b31f3e1f9f993b4f8e4174266aef093c6886103235cc84aa49d22c938
+  languageName: node
+  linkType: hard
+
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
   resolution: "@nodelib/fs.scandir@npm:2.1.5"
@@ -1155,6 +1192,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/react-dom@npm:^19.1.2":
+  version: 19.1.2
+  resolution: "@types/react-dom@npm:19.1.2"
+  peerDependencies:
+    "@types/react": ^19.0.0
+  checksum: 10c0/100c341cacba9ec8ae1d47ee051072a3450e9573bf8eeb7262490e341cb246ea0f95a07a1f2077e61cf92648f812a0324c602fcd811bd87b7ce41db2811510cd
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:^19.1.2":
+  version: 19.1.2
+  resolution: "@types/react@npm:19.1.2"
+  dependencies:
+    csstype: "npm:^3.0.2"
+  checksum: 10c0/76ffe71395c713d4adc3c759465012d3c956db00af35ab7c6d0d91bd07b274b7ce69caa0478c0760311587bd1e38c78ffc9688ebc629f2b266682a19d8750947
+  languageName: node
+  linkType: hard
+
 "@types/rollup-plugin-visualizer@npm:^5.0.3":
   version: 5.0.3
   resolution: "@types/rollup-plugin-visualizer@npm:5.0.3"
@@ -1288,8 +1343,13 @@ __metadata:
   resolution: "@vancura/sdg-inspect@workspace:."
   dependencies:
     "@eslint/js": "npm:^9.24.0"
+    "@iconify-json/solar": "npm:^1.2.2"
+    "@iconify/react": "npm:^5.2.1"
+    "@nanostores/react": "npm:^1.0.0"
     "@types/eslint-plugin-tailwindcss": "npm:^3.17.0"
     "@types/node": "npm:^20.17.30"
+    "@types/react": "npm:^19.1.2"
+    "@types/react-dom": "npm:^19.1.2"
     "@types/rollup-plugin-visualizer": "npm:^5.0.3"
     "@typescript-eslint/eslint-plugin": "npm:^8.30.1"
     "@typescript-eslint/parser": "npm:^8.30.1"
@@ -1306,13 +1366,15 @@ __metadata:
     eslint-plugin-security: "npm:^3.0.1"
     eslint-plugin-sonarjs: "npm:^3.0.2"
     eslint-plugin-tailwindcss: "npm:^3.18.0"
-    nanostores: "npm:^0.11.4"
+    nanostores: "npm:^1.0.1"
     postcss: "npm:^8.5.3"
     prettier: "npm:^3.5.3"
     prettier-plugin-jsdoc: "npm:^1.3.2"
     prettier-plugin-organize-attributes: "npm:^1.0.0"
     prettier-plugin-organize-imports: "npm:^4.1.0"
     prettier-plugin-tailwindcss: "npm:^0.6.11"
+    react: "npm:^19.1.0"
+    react-dom: "npm:^19.1.0"
     rollup-plugin-visualizer: "npm:^5.14.0"
     sharp: "npm:^0.34.1"
     svgo: "npm:^3.3.2"
@@ -1328,15 +1390,6 @@ __metadata:
     vite-plugin-inspect: "npm:^11.0.0"
     vite-plugin-preload: "npm:^0.4.2"
     yaml-eslint-parser: "npm:^1.3.0"
-  dependenciesMeta:
-    "@rollup/rollup-darwin-arm64":
-      optional: true
-    "@rollup/rollup-darwin-x64":
-      optional: true
-    "@rollup/rollup-linux-x64-gnu":
-      optional: true
-    "@rollup/rollup-win32-x64-msvc":
-      optional: true
   languageName: unknown
   linkType: soft
 
@@ -2054,6 +2107,13 @@ __metadata:
     "@asamuzakjp/css-color": "npm:^3.1.1"
     rrweb-cssom: "npm:^0.8.0"
   checksum: 10c0/770ccb288a99257fd0d5b129e03878f848e922d3b017358acb02e8dd530e8f0c7c6f74e6ae5367d715e2da36a490a734b4177fc1b78f3f08eca25f204a56a692
+  languageName: node
+  linkType: hard
+
+"csstype@npm:^3.0.2":
+  version: 3.1.3
+  resolution: "csstype@npm:3.1.3"
+  checksum: 10c0/80c089d6f7e0c5b2bd83cf0539ab41474198579584fa10d86d0cafe0642202343cbc119e076a0b1aece191989477081415d66c9fefbf3c957fc2fc4b7009f248
   languageName: node
   linkType: hard
 
@@ -4564,10 +4624,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nanostores@npm:^0.11.4":
-  version: 0.11.4
-  resolution: "nanostores@npm:0.11.4"
-  checksum: 10c0/45ce577ccd96938b756c238e5783b0de3369381905f164e7bd003794d34a3c1eb7bddb049699a48a35bb03d9745bcb3cd6ad549b5e81493b2de22ae2bdccf14c
+"nanostores@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "nanostores@npm:1.0.1"
+  checksum: 10c0/9fa5bd9f4beb1ac7cd83c935357057e4217e2eb0e36ef93ce87ed8a6814590c44e7aa843e9337089222cfb5231fdf0474d207debd12787b4582519393253fe22
   languageName: node
   linkType: hard
 
@@ -5231,6 +5291,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-dom@npm:^19.1.0":
+  version: 19.1.0
+  resolution: "react-dom@npm:19.1.0"
+  dependencies:
+    scheduler: "npm:^0.26.0"
+  peerDependencies:
+    react: ^19.1.0
+  checksum: 10c0/3e26e89bb6c67c9a6aa86cb888c7a7f8258f2e347a6d2a15299c17eb16e04c19194e3452bc3255bd34000a61e45e2cb51e46292392340432f133e5a5d2dfb5fc
+  languageName: node
+  linkType: hard
+
+"react@npm:^19.1.0":
+  version: 19.1.0
+  resolution: "react@npm:19.1.0"
+  checksum: 10c0/530fb9a62237d54137a13d2cfb67a7db6a2156faed43eecc423f4713d9b20c6f2728b026b45e28fcd72e8eadb9e9ed4b089e99f5e295d2f0ad3134251bdd3698
+  languageName: node
+  linkType: hard
+
 "read-cache@npm:^1.0.0":
   version: 1.0.0
   resolution: "read-cache@npm:1.0.0"
@@ -5565,6 +5643,13 @@ __metadata:
   dependencies:
     xmlchars: "npm:^2.2.0"
   checksum: 10c0/3847b839f060ef3476eb8623d099aa502ad658f5c40fd60c105ebce86d244389b0d76fcae30f4d0c728d7705ceb2f7e9b34bb54717b6a7dbedaf5dad2d9a4b74
+  languageName: node
+  linkType: hard
+
+"scheduler@npm:^0.26.0":
+  version: 0.26.0
+  resolution: "scheduler@npm:0.26.0"
+  checksum: 10c0/5b8d5bfddaae3513410eda54f2268e98a376a429931921a81b5c3a2873aab7ca4d775a8caac5498f8cbc7d0daeab947cf923dbd8e215d61671f9f4e392d34356
   languageName: node
   linkType: hard
 
