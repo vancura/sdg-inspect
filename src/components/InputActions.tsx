@@ -1,12 +1,12 @@
 import { useStore } from '@nanostores/react';
 import React, { useRef } from 'react';
-import { $sdgStore, clearContent, setContent } from '../stores/sdgStore.js';
+import { $sdgStore, autoFormatContent, clearContent, setContent } from '../stores/sdgStore.js';
 import { Button } from './Button.js';
 
 export const RESET_EVENT = 'sdg-inspect-reset';
 
 /**
- * InputActions component for file upload and paste functionality.
+ * InputActions component for file upload functionality, and pasting example content.
  *
  * @returns {React.ReactElement} The InputActions component.
  */
@@ -15,39 +15,49 @@ export function InputActions(): React.ReactElement {
     const { content, formattedContent } = useStore($sdgStore);
     const hasContent = Boolean(content.trim() ?? formattedContent.trim());
 
-    /** Handle file upload. */
+    /**
+     * Handle file upload.
+     *
+     * @param {React.ChangeEvent<HTMLInputElement>} e - The change event.
+     * @returns {void}
+     */
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>): void => {
-        // Get the first file from the input.
         const file = e.target.files?.[0];
 
-        // If there is a file, read it as text and set the content.
         if (file) {
             const reader = new FileReader();
 
-            // When the file is loaded, set the content.
             reader.onload = (event): void => {
                 const content = event.target?.result as string;
+
                 if (content) {
                     setContent(content);
+                    autoFormatContent();
                 }
             };
 
-            // Read the file as text.
             reader.readAsText(file);
 
-            // Reset the input so the same file can be uploaded again.
             if (fileInputRef.current) {
                 fileInputRef.current.value = '';
             }
         }
     };
 
-    /** Trigger file input click. */
+    /**
+     * Trigger file input click.
+     *
+     * @returns {void}
+     */
     const handleUploadClick = (): void => {
         fileInputRef.current?.click();
     };
 
-    /** Handle pasting example.jsonl content. */
+    /**
+     * Handle pasting example.jsonl content.
+     *
+     * @returns {Promise<void>} This method returns a promise.
+     */
     const handlePasteTestFile = async (): Promise<void> => {
         try {
             const response = await fetch('/example.jsonl');
@@ -60,6 +70,7 @@ export function InputActions(): React.ReactElement {
 
             if (text) {
                 setContent(text);
+                autoFormatContent();
             } else {
                 alert('No content found in example.jsonl file');
             }
@@ -69,24 +80,25 @@ export function InputActions(): React.ReactElement {
         }
     };
 
-    /** Handle clear operation. */
+    /**
+     * Handle clear operation.
+     *
+     * @returns {void}
+     */
     const handleClear = (): void => {
-        // First dispatch a reset event to notify components.
         const resetEvent = new Event(RESET_EVENT);
         document.dispatchEvent(resetEvent);
 
-        // Then clear content in the store.
         clearContent();
 
-        // Also clear the file input.
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
     };
 
     return (
-        <div className="mb-4 flex items-center justify-center gap-2">
-            <h1 className="mr-2 text-2xl font-light">SDG Inspect</h1>
+        <div className="mb-4 flex select-none items-center justify-center gap-2">
+            <h1 className="mr-8 text-2xl">SDG Inspect</h1>
 
             <Button
                 label="Upload"
