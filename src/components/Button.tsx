@@ -36,9 +36,9 @@ export function Button({
             type={type}
             onClick={onClick}
             disabled={isDisabled}
-            className={`flex items-center justify-center rounded-md bg-blue-600 px-3 py-1 text-xs font-light text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+            className={`flex items-center justify-center gap-1 rounded-md bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
         >
-            {icon && <Icon icon={icon} size={16} className={label ? 'my-1 mr-2' : 'my-1'} />}
+            {icon && <Icon icon={icon} size={20} className="my-1" />}
             {label}
         </button>
     );
