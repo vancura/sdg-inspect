@@ -1,6 +1,5 @@
 import React from 'react';
 import { InputActions } from './InputActions.js';
-import { ResultActions } from './ResultActions.js';
 import { TextEditor } from './TextEditor.js';
 
 /** Main App component that composes the application layout. */
@@ -10,7 +9,6 @@ export function App(): React.ReactElement {
             <div className="flex min-h-[80vh] flex-col items-center justify-center">
                 <InputActions />
                 <TextEditor />
-                <ResultActions />
             </div>
         </div>
     );
