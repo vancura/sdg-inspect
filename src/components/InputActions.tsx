@@ -122,7 +122,7 @@ export function InputActions(): React.ReactElement {
                     icon="trash-bin-trash-outline"
                     onClick={handleClear}
                     isDisabled={!hasContent}
-                    className="bg-red-600 hover:bg-red-700 focus:ring-red-500"
+                    className="bg-red-600 hover:bg-white focus:ring-red-500 hover:text-red-600"
                 />
             </div>
 
