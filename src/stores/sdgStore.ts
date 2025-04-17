@@ -26,27 +26,6 @@ export function setContent(content: string): void {
 }
 
 /**
- * Updates the store with the provided formatted content and sets the processing state to false.
- *
- * @param {string} formattedContent - The content to set in the store after it has been formatted.
- * @returns {void}
- */
-export function setFormattedContent(formattedContent: string): void {
-    $sdgStore.setKey('formattedContent', formattedContent);
-    $sdgStore.setKey('isProcessing', false);
-}
-
-/**
- * Updates the processing status in the store.
- *
- * @param {boolean} isProcessing - A boolean value indicating the processing state to set.
- * @returns {void}
- */
-export function setProcessing(isProcessing: boolean): void {
-    $sdgStore.setKey('isProcessing', isProcessing);
-}
-
-/**
  * Automatically formats the content in the store if it's not already processed. This is used to trigger formatting when
  * content is added without explicitly clicking the format button.
  *
