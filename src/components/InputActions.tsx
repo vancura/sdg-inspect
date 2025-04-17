@@ -97,32 +97,34 @@ export function InputActions(): React.ReactElement {
     };
 
     return (
-        <div className="mb-4 flex select-none items-center justify-center gap-2">
-            <h1 className="mr-8 text-2xl">SDG Inspect</h1>
+        <div className="flex w-full items-center border-b border-gray-200 px-4 py-2">
+            <h1 className="mr-auto text-2xl">SDG Inspect</h1>
 
-            <Button
-                label="Upload"
-                icon="upload-square-outline"
-                onClick={handleUploadClick}
-                isDisabled={hasContent}
-                className={hasContent ? 'cursor-not-allowed opacity-50' : ''}
-            />
+            <div className="flex items-center gap-2">
+                <Button
+                    label="Upload"
+                    icon="upload-square-outline"
+                    onClick={handleUploadClick}
+                    isDisabled={hasContent}
+                    className={hasContent ? 'cursor-not-allowed opacity-50' : ''}
+                />
 
-            <Button
-                label="Example"
-                icon="document-text-outline"
-                onClick={handlePasteTestFile}
-                isDisabled={hasContent}
-                className={hasContent ? 'cursor-not-allowed opacity-50' : ''}
-            />
+                <Button
+                    label="Example"
+                    icon="document-text-outline"
+                    onClick={handlePasteTestFile}
+                    isDisabled={hasContent}
+                    className={hasContent ? 'cursor-not-allowed opacity-50' : ''}
+                />
 
-            <Button
-                label=""
-                icon="trash-bin-trash-outline"
-                onClick={handleClear}
-                isDisabled={!hasContent}
-                className="bg-red-600 hover:bg-red-700 focus:ring-red-500"
-            />
+                <Button
+                    label=""
+                    icon="trash-bin-trash-outline"
+                    onClick={handleClear}
+                    isDisabled={!hasContent}
+                    className="bg-red-600 hover:bg-red-700 focus:ring-red-500"
+                />
+            </div>
 
             <input ref={fileInputRef} type="file" accept=".jsonl" className="hidden" onChange={handleFileUpload} />
         </div>

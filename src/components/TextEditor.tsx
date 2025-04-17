@@ -186,80 +186,42 @@ export function TextEditor(): React.ReactElement {
             padding: 12px;
             background-color: white;
         }
-
-        .resizable-container {
-            resize: both;
-            overflow: auto;
-            min-height: 24rem; /* 384px (same as h-96) */
-            max-height: 90vh;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.375rem;
-            padding: 1rem;
-        }
-
-        .resizable-container::after {
-            content: '';
-            position: absolute;
-            bottom: 3px;
-            right: 3px;
-            width: 10px;
-            height: 10px;
-            cursor: nwse-resize;
-            background: linear-gradient(
-                135deg,
-                transparent 50%,
-                rgba(0, 0, 0, 0.1) 50%,
-                rgba(0, 0, 0, 0.2)
-            );
-            border-radius: 0 0 2px 0;
-        }
     `;
 
     // Only show the content if we have something to display.
     const showFormattedView = displayMode === 'formatted' && formattedContent;
 
     return (
-        <div className="w-full">
-            <div className="mb-2 flex justify-between">
-                <div>
-                    {formattedContent && (
-                        <button
-                            onClick={handleToggleDisplay}
-                            className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800 hover:bg-gray-200"
-                        >
-                            {displayMode === 'raw' ? 'Show Formatted' : 'Show Raw'}
-                        </button>
-                    )}
-                </div>
-
-                {showFormattedView && (
-                    <div className="text-xs text-gray-500">↘️ Container is resizable from the bottom-right corner</div>
-                )}
-            </div>
-
-            {showFormattedView ? (
-                <div className="relative">
-                    <style>{sdgStyles}</style>
-
-                    <div
-                        className="resizable-container position-relative font-mono"
-                        dangerouslySetInnerHTML={{
-                            __html: formatHtmlDisplay(formattedContent)
-                        }}
-                    />
-                </div>
-            ) : (
+        <div className="relative flex h-full w-full">
+            {/* Left column - always visible textarea */}
+            <div className="flex h-full w-1/3 flex-col border-r border-fuchsia-300 p-4">
                 <textarea
                     id="text-editor"
                     ref={textareaRef}
-                    className="h-96 w-full rounded-md border border-gray-300 p-4 font-mono focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full flex-1 rounded-md border border-gray-300 p-4 font-mono focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Paste the SDG JSONL content here, or use the buttons above to upload or select an example."
                     onChange={handleChange}
                     onPaste={handlePaste}
-                    disabled={isProcessing}
+                    disabled={isProcessing || displayMode === 'formatted'}
                     value={content}
                 />
-            )}
+            </div>
+
+            <div className="relative h-full w-2/3 overflow-auto">
+                {showFormattedView ? (
+                    <div className="relative h-full px-4">
+                        <style>{sdgStyles}</style>
+                        <div
+                            className="h-full w-full font-mono"
+                            dangerouslySetInnerHTML={{
+                                __html: formatHtmlDisplay(formattedContent)
+                            }}
+                        />
+                    </div>
+                ) : (
+                    <div className="flex h-full items-center justify-center p-4 pt-16"></div>
+                )}
+            </div>
         </div>
     );
 }
