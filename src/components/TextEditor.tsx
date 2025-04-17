@@ -1,8 +1,7 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { json } from '@codemirror/lang-json';
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { HighlightStyle } from '@codemirror/language';
 import { EditorState, Text } from '@codemirror/state';
-import { EditorView, ViewUpdate, highlightActiveLine, keymap, lineNumbers } from '@codemirror/view';
+import { EditorView, ViewUpdate, highlightActiveLine, keymap } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 import { useStore } from '@nanostores/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -11,16 +10,7 @@ import { escapeHtml } from '../utils/htmlUtils.js';
 import { RESET_EVENT } from './InputActions.js';
 import { JsonBlock, JsonPlainBlock, jsonBlockStyles } from './JsonBlock.js';
 
-const jsonHighlightStyle = HighlightStyle.define([
-    { tag: tags.string, color: '#a11' },
-    { tag: tags.number, color: '#164' },
-    { tag: tags.bool, color: '#219' },
-    { tag: tags.null, color: '#219' },
-    { tag: tags.propertyName, color: '#00c' },
-    { tag: tags.punctuation, color: '#555' },
-    { tag: tags.brace, color: '#555' },
-    { tag: tags.bracket, color: '#555' }
-]);
+const jsonHighlightStyle = HighlightStyle.define([{ tag: tags.string, color: 'white' }]);
 
 /**
  * TextEditor component with CodeMirror for editing and previewing JSONL content.
@@ -39,7 +29,6 @@ export function TextEditor(): React.ReactElement {
     const [currentLine, setCurrentLine] = useState<number>(1);
     const [debugMessage, setDebugMessage] = useState<string>('');
     const [parsedBlocks, setParsedBlocks] = useState<Array<any>>([]);
-
     const isSelectingRef = useRef(false);
 
     useEffect(() => {
@@ -49,41 +38,43 @@ export function TextEditor(): React.ReactElement {
             const state = EditorState.create({
                 doc: content,
                 extensions: [
-                    lineNumbers(),
                     highlightActiveLine(),
                     history(),
-                    json(),
                     keymap.of([...defaultKeymap, ...historyKeymap]),
-                    syntaxHighlighting(jsonHighlightStyle),
                     EditorView.lineWrapping,
                     EditorView.theme({
                         '&': {
                             height: '100%',
-                            fontSize: '13px',
+                            fontSize: '12px',
+                            lineHeight: '1.2',
                             fontFamily: '"IBM Plex Mono", monospace !important'
                         },
+
                         '.cm-scroller': {
                             overflow: 'auto',
                             fontFamily: '"IBM Plex Mono", monospace !important'
                         },
+
                         '&.cm-editor.cm-focused': {
                             outline: 'none'
                         },
+
                         '.cm-line': {
-                            padding: '0 4px',
+                            padding: '12px 16px',
                             cursor: 'pointer',
-                            marginBottom: '4px'
+                            borderBottom: '1px solid transparent'
                         },
-                        '.cm-activeLineGutter': {
-                            backgroundColor: 'rgba(0, 0, 0, 0.04)'
+
+                        '.cm-activeLine': {
+                            backgroundColor: 'rgba(255, 255, 255, 0.4)',
+                            borderBottomColor: 'rgba(0, 0, 0, 0.2)'
                         },
+
                         '.cm-content': {
-                            padding: '10px 0',
+                            padding: '0',
                             fontFamily: '"IBM Plex Mono", monospace !important'
                         },
-                        '.cm-activeLine': {
-                            backgroundColor: 'rgba(255, 255, 100, 0.1)'
-                        },
+
                         '.cm-gutters': {
                             fontFamily: '"IBM Plex Mono", monospace !important'
                         }
@@ -205,8 +196,7 @@ export function TextEditor(): React.ReactElement {
 
     const clearAllHighlights = () => {
         if (previewRef.current) {
-            previewRef.current.querySelectorAll('.active-block, .preview-block-highlight').forEach((el) => {
-                el.classList.remove('active-block');
+            previewRef.current.querySelectorAll('.preview-block-highlight').forEach((el) => {
                 el.classList.remove('preview-block-highlight');
             });
         }
@@ -646,10 +636,10 @@ export function TextEditor(): React.ReactElement {
 
     return (
         <div className="relative flex h-full w-full font-sans">
-            <div className="flex h-full w-1/3 flex-col border-r border-fuchsia-300 p-4">
+            <div className="bg-text-editor-bg flex h-full w-1/3 flex-col border-r-2">
                 <div
                     ref={editorRef}
-                    className="flex-1 overflow-hidden rounded-md border border-gray-300 font-mono text-sm"
+                    className="text-text-editor-text flex-1 overflow-hidden font-mono text-sm"
                     style={{ fontFamily: '"IBM Plex Mono", monospace' }}
                 />
             </div>
@@ -659,6 +649,7 @@ export function TextEditor(): React.ReactElement {
                     <div className="json-scroller relative h-full w-full overflow-y-auto px-4" ref={previewRef}>
                         <style>{sdgStyles}</style>
                         <style>{jsonBlockStyles}</style>
+
                         <div className="w-full font-mono">
                             {parsedBlocks.map((block) =>
                                 block.type === 'sdg' ? (
@@ -682,13 +673,7 @@ export function TextEditor(): React.ReactElement {
                     </div>
                 ) : (
                     <div className="flex h-full items-center justify-center p-4 pt-16">
-                        <div className="text-gray-500">
-                            {content && isProcessing
-                                ? 'Formatting content for preview...'
-                                : content
-                                  ? 'Processing your JSONL content...'
-                                  : 'Preview will appear here when content is entered'}
-                        </div>
+                        <div className="text-secondary-text">Preview will appear here when content is entered</div>
                     </div>
                 )}
             </div>

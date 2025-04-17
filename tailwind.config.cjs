@@ -13,8 +13,17 @@ const config = {
 
             colors: {
                 debug: '#f0f',
-                background: '#eee',
-                'primary-text': 'rgba(0, 0, 0, 0.87)'
+                background: '#3B3B3B',
+                'text-editor-bg': 'rgba(255, 255, 255, 0.8)',
+                'text-editor-text': 'rgba(0, 0, 0, 1)',
+                'primary-sep': 'rgba(255, 255, 255, 0.6)',
+                'secondary-sep': 'rgba(255, 255, 255, 0.2)',
+                'primary-text': 'rgba(255, 255, 255, 1)',
+                'secondary-text': 'rgba(255, 255, 255, 0.45)',
+                'button-stroke': 'rgba(255, 255, 255, 1)',
+                'button-label': 'rgba(255, 255, 255, 1)',
+                'button-hover-bg': 'rgba(255, 255, 255, 1)',
+                'button-hover-text': 'rgba(0, 0, 0, 1)'
             }
         }
     },

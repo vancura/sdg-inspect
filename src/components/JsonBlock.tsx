@@ -3,67 +3,34 @@ import React from 'react';
 /** Styles for JsonBlock and JsonPlainBlock components */
 export const jsonBlockStyles = `
     .json-block {
-        margin: 16px 0;
-        border: 1px solid #e1e4e8;
-        border-radius: 6px;
-        overflow: hidden;
+        margin: 0 0 16px;
         position: relative;
         font-family: "IBM Plex Mono", monospace;
         cursor: pointer;
-        transition: all 0.15s ease-in-out;
-    }
-
-    .json-block:hover {
-        border-color: #0366d6;
-        box-shadow: 0 0 0 1px #0366d6;
-        transform: translateY(-2px);
     }
 
     .json-header {
-        background-color: #f6f8fa;
-        padding: 8px 12px;
-        border-bottom: 1px solid #e1e4e8;
-        font-family: "IBM Plex Mono", monospace;
-        font-size: 12px;
-        color: #586069;
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 11px 16px 12px;
+        border-bottom: 1px solid rgba;
+        font-family: "IBM Plex Sans", sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        color: black;
+    }
+
+    .preview-block-highlight .json-header {
+        background: rgba(255, 255, 255, 1);
     }
 
     .json-content {
-        padding: 12px;
-        background-color: white;
+        padding: 12px 16px;
+        background-color: rgba(255, 255, 255, 0.7);
+        color: black;
     }
 
-    .json-block.preview-block-highlight .json-header {
-        background-color: rgba(3, 102, 214, 0.2);
-        border-bottom: 2px solid #0366d6;
-        color: #0366d6;
-        font-weight: bold;
-    }
-
-    .json-block.preview-block-highlight:before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        height: 100%;
-        width: 6px;
-        background-color: #0366d6;
-    }
-
-    .active-block {
-        border-color: #0366d6;
-        box-shadow: 0 0 0 2px #0366d6;
-        background-color: rgba(3, 102, 214, 0.05);
-    }
-
-    .preview-block-highlight {
-        border: 3px solid #0366d6 !important;
-        box-shadow: 0 0 12px rgba(3, 102, 214, 0.7) !important;
-        background-color: rgba(3, 102, 214, 0.1) !important;
-        position: relative;
-        z-index: 1;
-        outline: none;
-        transform: translateZ(0);
+    .preview-block-highlight .json-content {
+        background: rgba(255, 255, 255, 0.9);
     }
 
     .json-block, pre {
@@ -120,13 +87,14 @@ export const JsonBlock: React.FC<IJsonBlockProps> = ({ index, id, messages, onBl
                         if (!msg.content) return null;
 
                         return (
-                            <div className="my-2" key={msgIndex}>
+                            <div className="mb-4 mt-2" key={msgIndex}>
                                 <div className="mb-1 text-xs text-gray-500">Role: {msg.role ?? 'unknown'}</div>
                                 <div dangerouslySetInnerHTML={{ __html: msg.content }} />
                             </div>
                         );
                     })}
-                    {id && <div className="mt-2 text-xs text-gray-500">ID: {id}</div>}
+
+                    {id && <div className="mb-1 mt-2 text-xs text-gray-500">ID: {id}</div>}
                 </div>
             </div>
         </>
@@ -156,7 +124,7 @@ export const JsonPlainBlock: React.FC<IJsonPlainBlockProps> = ({ index, content,
 
     return (
         <pre
-            className="my-2 overflow-x-auto rounded bg-gray-50 p-2"
+            className="bg-gray-50 px-4 py-2 text-black"
             data-line-index={index}
             data-source-line={index + 1}
             id={blockId}

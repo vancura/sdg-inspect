@@ -97,7 +97,7 @@ export function InputActions(): React.ReactElement {
     };
 
     return (
-        <div className="flex w-full items-center border-b border-gray-200 px-4 py-2">
+        <div className="border-sep flex w-full select-none items-center border-b-2 px-4 py-4">
             <h1 className="mr-auto text-2xl">SDG Inspect</h1>
 
             <div className="flex items-center gap-2">
