@@ -1,14 +1,17 @@
 import { useStore } from '@nanostores/react';
 import React, { useEffect, useRef, useState } from 'react';
-import { $sdgStore, setContent } from '../stores/sdgStore.js';
+import { $sdgStore, autoFormatContent, setContent } from '../stores/sdgStore.js';
 import { RESET_EVENT } from './InputActions.js';
 
-/** TextEditor component for displaying and editing JSONL content. */
+/**
+ * TextEditor component for displaying and editing JSONL content.
+ *
+ * This component is responsible for displaying the JSONL content in a formatted or raw view, and for automatically
+ * formatting the content when it changes.
+ */
 export function TextEditor(): React.ReactElement {
-    // Get the content, formatted content, and processing state from the store.
     const { content, formattedContent, isProcessing } = useStore($sdgStore);
 
-    // Set the display mode.
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [displayMode, setDisplayMode] = useState<'raw' | 'formatted'>('raw');
 
@@ -33,6 +36,13 @@ export function TextEditor(): React.ReactElement {
         }
     }, [content, formattedContent]);
 
+    // Automatically trigger the inspection process when content changes.
+    useEffect(() => {
+        if (content.trim() && !isProcessing && !formattedContent) {
+            autoFormatContent();
+        }
+    }, [content, isProcessing, formattedContent]);
+
     // Ensure textarea content is synced with store.
     useEffect(() => {
         if (textareaRef.current) {
@@ -49,33 +59,44 @@ export function TextEditor(): React.ReactElement {
             }
         };
 
-        // Add custom event listener.
         document.addEventListener(RESET_EVENT, handleReset);
 
-        // Cleanup.
         return () => {
             document.removeEventListener(RESET_EVENT, handleReset);
         };
     }, []);
 
-    /** Handle content changes. */
+    /**
+     * Handle content changes.
+     *
+     * @param {React.ChangeEvent<HTMLInputElement>} e - The change event.
+     * @returns {void}
+     */
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
         setContent(e.target.value);
     };
 
-    /** Handle paste event directly into the textarea. */
+    /**
+     * Handle paste event directly into the textarea.
+     *
+     * @returns {void}
+     */
     const handlePaste = (): void => {
         // We need a slight delay to allow the textarea to update.
         setTimeout(() => {
             if (textareaRef.current) {
                 setContent(textareaRef.current.value);
+                autoFormatContent();
             }
         }, 10);
     };
 
-    /** Toggle between raw and formatted display. */
+    /**
+     * Toggle between raw and formatted display.
+     *
+     * @returns {void}
+     */
     const handleToggleDisplay = (): void => {
-        // Toggle the display mode.
         setDisplayMode(displayMode === 'raw' ? 'formatted' : 'raw');
 
         // If switching to raw, ensure the textarea is in sync with the content state.
@@ -88,9 +109,7 @@ export function TextEditor(): React.ReactElement {
         }
     };
 
-    // Add styles for the SDG highlighting.
     const sdgStyles = `
-        /* User/Assistant tag styling */
         .sdg-user-tag {
             color: #005cc5;
             font-weight: bold;
@@ -111,7 +130,6 @@ export function TextEditor(): React.ReactElement {
             margin: 4px 0;
         }
 
-        /* Question/Answer content styling */
         .sdg-question {
             background-color: rgba(0, 92, 197, 0.1);
             border-left: 3px solid #005cc5;
@@ -130,7 +148,6 @@ export function TextEditor(): React.ReactElement {
             white-space: pre-wrap;
         }
 
-        /* Metadata styling */
         .sdg-document {
             font-style: italic;
             background-color: rgba(145, 71, 255, 0.1);
@@ -149,7 +166,6 @@ export function TextEditor(): React.ReactElement {
             border-radius: 4px;
         }
 
-        /* JSON structure enhancements */
         .json-block {
             margin: 16px 0;
             border: 1px solid #e1e4e8;
@@ -171,7 +187,6 @@ export function TextEditor(): React.ReactElement {
             background-color: white;
         }
 
-        /* Resizable container */
         .resizable-container {
             resize: both;
             overflow: auto;
@@ -182,7 +197,6 @@ export function TextEditor(): React.ReactElement {
             padding: 1rem;
         }
 
-        /* Resize handle indicator */
         .resizable-container::after {
             content: '';
             position: absolute;
@@ -217,6 +231,7 @@ export function TextEditor(): React.ReactElement {
                         </button>
                     )}
                 </div>
+
                 {showFormattedView && (
                     <div className="text-xs text-gray-500">↘️ Container is resizable from the bottom-right corner</div>
                 )}
@@ -225,6 +240,7 @@ export function TextEditor(): React.ReactElement {
             {showFormattedView ? (
                 <div className="relative">
                     <style>{sdgStyles}</style>
+
                     <div
                         className="resizable-container position-relative font-mono"
                         dangerouslySetInnerHTML={{
@@ -237,7 +253,7 @@ export function TextEditor(): React.ReactElement {
                     id="text-editor"
                     ref={textareaRef}
                     className="h-96 w-full rounded-md border border-gray-300 p-4 font-mono focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Paste JSONL content here or use the buttons above to upload or paste from clipboard..."
+                    placeholder="Paste the SDG JSONL content here, or use the buttons above to upload or select an example."
                     onChange={handleChange}
                     onPaste={handlePaste}
                     disabled={isProcessing}
@@ -249,9 +265,13 @@ export function TextEditor(): React.ReactElement {
 }
 
 // noinspection FunctionWithMultipleReturnPointsJS
-/** Format the JSONL content for HTML display. */
+/**
+ * Format the JSONL content for HTML display.
+ *
+ * @param {string} content - The JSONL content to format.
+ * @returns {string} The formatted HTML content.
+ */
 function formatHtmlDisplay(content: string): string {
-    // If there is no content, return an empty string.
     if (!content) {
         return '';
     }
@@ -262,24 +282,25 @@ function formatHtmlDisplay(content: string): string {
         .split('\n')
         .map((line, index) => {
             try {
-                // Try to parse the line to extract the highlighted content.
                 const obj = JSON.parse(line);
 
-                // Create a prettier display for messages.
                 if (obj.messages && Array.isArray(obj.messages)) {
                     // noinspection FunctionWithMultipleReturnPointsJS
                     return `
                         <div class="json-block">
                             <div class="json-header">SDG Entry #${index + 1}</div>
+
                             <div class="json-content">
                                 ${obj.messages
                                     .map((msg: { content?: string; role?: string }) => {
                                         if (!msg.content) {
                                             return '';
                                         }
+
                                         return `
-                                        <div class="my-2">
-                                            <div class="text-xs text-gray-500 mb-1">Role: ${msg.role || 'unknown'}</div>
+                                            <div class="my-2">
+                                                <div class="text-xs text-gray-500 mb-1">Role: ${msg.role ?? 'unknown'}</div>
+
                                             <div>${msg.content}</div>
                                         </div>
                                     `;
@@ -292,17 +313,20 @@ function formatHtmlDisplay(content: string): string {
                     `;
                 }
 
-                // For other types of JSONL content.
                 return `<pre class="my-2 p-2 bg-gray-50 rounded overflow-x-auto">${escapeHtml(line)}</pre>`;
             } catch {
-                // If we can't parse it, just show the raw line.
                 return `<pre class="my-2 p-2 bg-gray-50 rounded overflow-x-auto">${escapeHtml(line)}</pre>`;
             }
         })
         .join('\n');
 }
 
-/** Escape HTML special characters. */
+/**
+ * Escape HTML special characters.
+ *
+ * @param {string} unsafe - The unsafe string to escape.
+ * @returns {string} The escaped string.
+ */
 function escapeHtml(unsafe: string): string {
     return unsafe
         .replace(/&/g, '&amp;')
