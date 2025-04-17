@@ -53,9 +53,9 @@ export function setProcessing(isProcessing: boolean): void {
  * @returns {void}
  */
 export function autoFormatContent(): void {
-    const { content, formattedContent, isProcessing } = $sdgStore.get();
+    const { content, isProcessing } = $sdgStore.get();
 
-    if (content.trim() && !isProcessing && !formattedContent) {
+    if (content.trim() && !isProcessing) {
         try {
             $sdgStore.setKey('isProcessing', true);
 

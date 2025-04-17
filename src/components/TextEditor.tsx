@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { $sdgStore, autoFormatContent, setContent } from '../stores/sdgStore.js';
 import { RESET_EVENT } from './InputActions.js';
 
@@ -11,37 +11,29 @@ import { RESET_EVENT } from './InputActions.js';
  */
 export function TextEditor(): React.ReactElement {
     const { content, formattedContent, isProcessing } = useStore($sdgStore);
-
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const [displayMode, setDisplayMode] = useState<'raw' | 'formatted'>('raw');
+    const debounceTimerRef = useRef<number | null>(null);
 
-    // When formattedContent changes, update the display mode to formatted.
-    useEffect(() => {
-        if (formattedContent) {
-            setDisplayMode('formatted');
+    /** Debounced function to format content after typing stops. */
+    const debouncedFormatContent = useCallback(() => {
+        if (debounceTimerRef.current) {
+            window.clearTimeout(debounceTimerRef.current);
         }
-    }, [formattedContent]);
 
-    // When content changes (but not due to formatting), reset to raw mode.
-    useEffect(() => {
-        if (content && !formattedContent) {
-            setDisplayMode('raw');
-        }
-    }, [content, formattedContent]);
-
-    // When content is cleared, reset to raw mode.
-    useEffect(() => {
-        if (!content && !formattedContent) {
-            setDisplayMode('raw');
-        }
-    }, [content, formattedContent]);
+        debounceTimerRef.current = window.setTimeout(() => {
+            if (content.trim()) {
+                autoFormatContent();
+            }
+            debounceTimerRef.current = null;
+        }, 500); // 500ms debounce delay
+    }, [content]);
 
     // Automatically trigger the inspection process when content changes.
     useEffect(() => {
-        if (content.trim() && !isProcessing && !formattedContent) {
-            autoFormatContent();
+        if (content.trim() && !isProcessing) {
+            debouncedFormatContent();
         }
-    }, [content, isProcessing, formattedContent]);
+    }, [content, isProcessing, debouncedFormatContent]);
 
     // Ensure textarea content is synced with store.
     useEffect(() => {
@@ -53,7 +45,6 @@ export function TextEditor(): React.ReactElement {
     // Listen for reset event.
     useEffect(() => {
         const handleReset = (): void => {
-            setDisplayMode('raw');
             if (textareaRef.current) {
                 textareaRef.current.value = '';
             }
@@ -63,6 +54,10 @@ export function TextEditor(): React.ReactElement {
 
         return () => {
             document.removeEventListener(RESET_EVENT, handleReset);
+            // Clear any pending debounce timer on unmount
+            if (debounceTimerRef.current) {
+                window.clearTimeout(debounceTimerRef.current);
+            }
         };
     }, []);
 
@@ -74,6 +69,7 @@ export function TextEditor(): React.ReactElement {
      */
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
         setContent(e.target.value);
+        // Debounced formatting will be triggered by the useEffect
     };
 
     /**
@@ -86,27 +82,10 @@ export function TextEditor(): React.ReactElement {
         setTimeout(() => {
             if (textareaRef.current) {
                 setContent(textareaRef.current.value);
+                // Immediately format pasted content without debounce
                 autoFormatContent();
             }
         }, 10);
-    };
-
-    /**
-     * Toggle between raw and formatted display.
-     *
-     * @returns {void}
-     */
-    const handleToggleDisplay = (): void => {
-        setDisplayMode(displayMode === 'raw' ? 'formatted' : 'raw');
-
-        // If switching to raw, ensure the textarea is in sync with the content state.
-        if (displayMode === 'formatted' && textareaRef.current) {
-            setTimeout(() => {
-                if (textareaRef.current) {
-                    textareaRef.current.value = content;
-                }
-            }, 0);
-        }
     };
 
     const sdgStyles = `
@@ -188,13 +167,21 @@ export function TextEditor(): React.ReactElement {
         }
     `;
 
-    // Only show the content if we have something to display.
-    const showFormattedView = displayMode === 'formatted' && formattedContent;
-
     return (
         <div className="relative flex h-full w-full">
             {/* Left column - always visible textarea */}
             <div className="flex h-full w-1/3 flex-col border-r border-fuchsia-300 p-4">
+                <div className="mb-2 flex justify-between">
+                    <div>
+                        {content && (
+                            <div className="text-xs">
+                                <span className="font-medium text-green-600">Live Preview Enabled</span>
+                                {isProcessing && <span className="ml-2 text-amber-600">Updating preview...</span>}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
                 <textarea
                     id="text-editor"
                     ref={textareaRef}
@@ -202,14 +189,32 @@ export function TextEditor(): React.ReactElement {
                     placeholder="Paste the SDG JSONL content here, or use the buttons above to upload or select an example."
                     onChange={handleChange}
                     onPaste={handlePaste}
-                    disabled={isProcessing || displayMode === 'formatted'}
+                    disabled={isProcessing}
                     value={content}
                 />
             </div>
 
+            {/* Right column - formatted content (live preview) */}
             <div className="relative h-full w-2/3 overflow-auto">
-                {showFormattedView ? (
-                    <div className="relative h-full px-4">
+                <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-1">
+                    <div className="text-xs">
+                        {isProcessing ? (
+                            <span className="text-amber-600">Updating preview...</span>
+                        ) : content && formattedContent ? (
+                            <span className="text-green-600">Preview up-to-date</span>
+                        ) : content && !formattedContent ? (
+                            <span className="text-amber-600">Processing content...</span>
+                        ) : (
+                            <span>Waiting for input</span>
+                        )}
+                    </div>
+
+                    {/* Current indicator */}
+                    <div className="text-3xl font-bold text-fuchsia-500">CURRENT</div>
+                </div>
+
+                {formattedContent ? (
+                    <div className="relative h-full px-4 py-4 pt-8">
                         <style>{sdgStyles}</style>
                         <div
                             className="h-full w-full font-mono"
@@ -219,7 +224,15 @@ export function TextEditor(): React.ReactElement {
                         />
                     </div>
                 ) : (
-                    <div className="flex h-full items-center justify-center p-4 pt-16"></div>
+                    <div className="flex h-full items-center justify-center p-4 pt-16">
+                        <div className="text-gray-500">
+                            {content && isProcessing
+                                ? 'Formatting content for preview...'
+                                : content
+                                  ? 'Processing your JSONL content...'
+                                  : 'Preview will appear here when content is entered'}
+                        </div>
+                    </div>
                 )}
             </div>
         </div>
