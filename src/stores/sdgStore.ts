@@ -1,6 +1,7 @@
 import { map } from 'nanostores';
 
 import type { ISDGInspectState } from '../types/index.js';
+import { formatJSONL } from '../utils/jsonlUtils.js';
 
 /** The initial state for the SDG inspection. */
 const initialState: ISDGInspectState = {
@@ -14,26 +15,21 @@ const initialState: ISDGInspectState = {
 export const $sdgStore = map<ISDGInspectState>(initialState);
 
 /**
- * Sets the content within the store, clears any existing error, and resets the formatted content if it exists.
+ * Sets the content within the store and clears any existing error.
  *
  * @param {string} content - The content to be set.
- * @returns {void} This method does not return a value.
+ * @returns {void}
  */
 export function setContent(content: string): void {
     $sdgStore.setKey('content', content);
     $sdgStore.setKey('error', null);
-
-    // Reset formatted content when new content is set.
-    if ($sdgStore.get().formattedContent) {
-        $sdgStore.setKey('formattedContent', '');
-    }
 }
 
 /**
  * Updates the store with the provided formatted content and sets the processing state to false.
  *
  * @param {string} formattedContent - The content to set in the store after it has been formatted.
- * @returns {void} This function does not return a value.
+ * @returns {void}
  */
 export function setFormattedContent(formattedContent: string): void {
     $sdgStore.setKey('formattedContent', formattedContent);
@@ -44,10 +40,33 @@ export function setFormattedContent(formattedContent: string): void {
  * Updates the processing status in the store.
  *
  * @param {boolean} isProcessing - A boolean value indicating the processing state to set.
- * @returns {void} This function does not return a value.
+ * @returns {void}
  */
 export function setProcessing(isProcessing: boolean): void {
     $sdgStore.setKey('isProcessing', isProcessing);
+}
+
+/**
+ * Automatically formats the content in the store if it's not already processed. This is used to trigger formatting when
+ * content is added without explicitly clicking the format button.
+ *
+ * @returns {void}
+ */
+export function autoFormatContent(): void {
+    const { content, formattedContent, isProcessing } = $sdgStore.get();
+
+    if (content.trim() && !isProcessing && !formattedContent) {
+        try {
+            $sdgStore.setKey('isProcessing', true);
+
+            const formatted = formatJSONL(content);
+
+            $sdgStore.setKey('formattedContent', formatted);
+            $sdgStore.setKey('isProcessing', false);
+        } catch (error) {
+            setError(String(error));
+        }
+    }
 }
 
 /**
@@ -67,7 +86,7 @@ export function setError(error: string | null): void {
  * This method updates the store keys related to content by resetting them to their default values. It ensures that the
  * state is properly reset and all subscribers are notified of the changes.
  *
- * @returns {void} Indicates that no value is returned from this function.
+ * @returns {void}
  */
 export function clearContent(): void {
     $sdgStore.setKey('content', '');
