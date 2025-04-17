@@ -1,11 +1,14 @@
-module.exports = {
+// @ts-check
+
+/** @type {import('tailwindcss').Config} */
+const config = {
     content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
 
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Inter', 'system-ui', 'sans-serif'],
-                mono: ['monospace']
+                sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
+                mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace']
             },
 
             colors: {
@@ -18,3 +21,5 @@ module.exports = {
 
     plugins: []
 };
+
+module.exports = config;
