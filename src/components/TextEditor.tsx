@@ -7,7 +7,9 @@ import { tags } from '@lezer/highlight';
 import { useStore } from '@nanostores/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { $sdgStore, autoFormatContent, setContent } from '../stores/sdgStore.js';
+import { escapeHtml } from '../utils/htmlUtils.js';
 import { RESET_EVENT } from './InputActions.js';
+import { JsonBlock, JsonPlainBlock } from './JsonBlock.js';
 
 // Custom syntax highlighting theme
 const jsonHighlightStyle = HighlightStyle.define([
@@ -37,6 +39,7 @@ export function TextEditor(): React.ReactElement {
     const [isLoading, setIsLoading] = useState(true);
     const [currentLine, setCurrentLine] = useState<number>(1);
     const [debugMessage, setDebugMessage] = useState<string>('');
+    const [parsedBlocks, setParsedBlocks] = useState<Array<any>>([]);
 
     const isSelectingRef = useRef(false);
 
@@ -249,6 +252,9 @@ export function TextEditor(): React.ReactElement {
 
     useEffect(() => {
         if (formattedContent) {
+            // Parse the content to use with React components
+            parseFormattedContent(formattedContent);
+
             const timerId = setTimeout(() => {
                 document.querySelectorAll('.json-block, pre').forEach((block, index) => {
                     block.setAttribute('data-line-index', index.toString());
@@ -261,9 +267,43 @@ export function TextEditor(): React.ReactElement {
                 clearTimeout(timerId);
             };
         } else if (!formattedContent && previewRef.current) {
+            setParsedBlocks([]);
             previewRef.current.innerHTML = '';
         }
     }, [formattedContent]);
+
+    const parseFormattedContent = (content: string) => {
+        if (!content) {
+            setParsedBlocks([]);
+            return;
+        }
+
+        const blocks = content.split('\n').map((line, index) => {
+            try {
+                const obj = JSON.parse(line);
+                if (obj.messages && Array.isArray(obj.messages)) {
+                    return {
+                        type: 'sdg',
+                        data: obj,
+                        index
+                    };
+                }
+                return {
+                    type: 'plain',
+                    data: line,
+                    index
+                };
+            } catch {
+                return {
+                    type: 'plain',
+                    data: line,
+                    index
+                };
+            }
+        });
+
+        setParsedBlocks(blocks);
+    };
 
     const scrollEditorToLine = useCallback(
         (lineNumber: number) => {
@@ -374,11 +414,11 @@ export function TextEditor(): React.ReactElement {
         };
     }, []);
 
-    useEffect(() => {
-        const blockClickHandler = (blockId: string) => {
+    const handleBlockClick = useCallback(
+        (blockId: string) => {
             const element = document.getElementById(blockId);
             if (element && previewRef.current) {
-                setDebugMessage(`Block clicked via global handler: ${blockId}`);
+                setDebugMessage(`Block clicked via handler: ${blockId}`);
 
                 previewRef.current.querySelectorAll('.preview-block-highlight').forEach((el) => {
                     el.classList.remove('preview-block-highlight');
@@ -404,14 +444,17 @@ export function TextEditor(): React.ReactElement {
                     handleCursorPositionChanged(pos);
                 }
             }
-        };
+        },
+        [previewRef.current, getLineStartPosition, scrollEditorToLine, handleCursorPositionChanged]
+    );
 
-        (window as any).handleBlockClick = blockClickHandler;
+    useEffect(() => {
+        (window as any).handleBlockClick = handleBlockClick;
 
         return () => {
             delete (window as any).handleBlockClick;
         };
-    }, [getLineStartPosition, handleCursorPositionChanged, scrollEditorToLine]);
+    }, [handleBlockClick]);
 
     useEffect(() => {
         if (formattedContent && editorViewRef.current) {
@@ -691,12 +734,26 @@ export function TextEditor(): React.ReactElement {
                 {formattedContent ? (
                     <div className="json-scroller relative h-full w-full overflow-y-auto px-4" ref={previewRef}>
                         <style>{sdgStyles}</style>
-                        <div
-                            className="w-full font-mono"
-                            dangerouslySetInnerHTML={{
-                                __html: formatHtmlDisplay(formattedContent)
-                            }}
-                        />
+                        <div className="w-full font-mono">
+                            {parsedBlocks.map((block) =>
+                                block.type === 'sdg' ? (
+                                    <JsonBlock
+                                        key={block.index}
+                                        index={block.index}
+                                        id={block.data.id}
+                                        messages={block.data.messages}
+                                        onBlockClick={handleBlockClick}
+                                    />
+                                ) : (
+                                    <JsonPlainBlock
+                                        key={block.index}
+                                        index={block.index}
+                                        content={escapeHtml(block.data)}
+                                        onBlockClick={handleBlockClick}
+                                    />
+                                )
+                            )}
+                        </div>
                     </div>
                 ) : (
                     <div className="flex h-full items-center justify-center p-4 pt-16">
@@ -712,78 +769,4 @@ export function TextEditor(): React.ReactElement {
             </div>
         </div>
     );
-}
-
-/**
- * Format the JSONL content for HTML display.
- *
- * @param {string} content - The JSONL content to format.
- * @returns {string} The formatted HTML content.
- */
-function formatHtmlDisplay(content: string): string {
-    if (!content) {
-        return '';
-    }
-
-    return content
-        .split('\n')
-        .map((line, index) => {
-            try {
-                const obj = JSON.parse(line);
-
-                if (obj.messages && Array.isArray(obj.messages)) {
-                    return `
-                        <div class="json-block"
-                            data-line-index="${index}"
-                            data-source-line="${index + 1}"
-                            id="formatted-line-${index}"
-                            tabindex="0"
-                            role="button"
-                            onclick="window.handleBlockClick && window.handleBlockClick('formatted-line-${index}')">
-                            <div class="json-header">SDG Entry #${index + 1}</div>
-
-                            <div class="json-content">
-                                ${obj.messages
-                                    .map((msg: { content?: string; role?: string }) => {
-                                        if (!msg.content) {
-                                            return '';
-                                        }
-
-                                        return `
-                                            <div class="my-2">
-                                                <div class="text-xs text-gray-500 mb-1">Role: ${msg.role ?? 'unknown'}</div>
-
-                                            <div>${msg.content}</div>
-                                        </div>
-                                    `;
-                                    })
-                                    .join('')}
-
-                                ${obj.id ? `<div class="text-xs text-gray-500 mt-2">ID: ${obj.id}</div>` : ''}
-                            </div>
-                        </div>
-                    `;
-                }
-
-                return `<pre class="my-2 p-2 bg-gray-50 rounded overflow-x-auto" data-line-index="${index}" data-source-line="${index + 1}" id="formatted-line-${index}" tabindex="0" role="button" onclick="window.handleBlockClick && window.handleBlockClick('formatted-line-${index}')">${escapeHtml(line)}</pre>`;
-            } catch {
-                return `<pre class="my-2 p-2 bg-gray-50 rounded overflow-x-auto" data-line-index="${index}" data-source-line="${index + 1}" id="formatted-line-${index}" tabindex="0" role="button" onclick="window.handleBlockClick && window.handleBlockClick('formatted-line-${index}')">${escapeHtml(line)}</pre>`;
-            }
-        })
-        .join('\n');
-}
-
-/**
- * Escape HTML special characters.
- *
- * @param {string} unsafe - The unsafe string to escape.
- * @returns {string} The escaped string.
- */
-function escapeHtml(unsafe: string): string {
-    return unsafe
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
 }
