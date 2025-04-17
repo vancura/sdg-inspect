@@ -317,6 +317,11 @@ export function TextEditor(): React.ReactElement {
 
     useEffect(() => {
         const handlePreviewClick = (e: MouseEvent) => {
+            // Skip handling if text is being selected
+            if (window.getSelection()?.toString()) {
+                return;
+            }
+
             const target = e.target as HTMLElement;
             const blockElement = target.closest('.json-block, pre') as HTMLElement | null;
 
@@ -398,6 +403,11 @@ export function TextEditor(): React.ReactElement {
 
     const handleBlockClick = useCallback(
         (blockId: string) => {
+            // Skip handling if text is being selected
+            if (isSelectingRef.current || window.getSelection()?.toString()) {
+                return;
+            }
+
             const element = document.getElementById(blockId);
             if (element && previewRef.current) {
                 setDebugMessage(`Block clicked via handler: ${blockId}`);
@@ -427,7 +437,7 @@ export function TextEditor(): React.ReactElement {
                 }
             }
         },
-        [previewRef.current, getLineStartPosition, scrollEditorToLine, handleCursorPositionChanged]
+        [previewRef.current, getLineStartPosition, scrollEditorToLine, handleCursorPositionChanged, isSelectingRef]
     );
 
     useEffect(() => {
@@ -570,6 +580,32 @@ export function TextEditor(): React.ReactElement {
         };
     }, [editorViewRef.current, previewRef.current, handleCursorPositionChanged]);
 
+    // Add mouse event listeners to track text selection globally
+    useEffect(() => {
+        const handleMouseDown = () => {
+            isSelectingRef.current = false;
+        };
+
+        const handleMouseUp = () => {
+            // Short delay to check selection after mouseup
+            setTimeout(() => {
+                if (window.getSelection()?.toString()) {
+                    isSelectingRef.current = true;
+                } else {
+                    isSelectingRef.current = false;
+                }
+            }, 10);
+        };
+
+        document.addEventListener('mousedown', handleMouseDown);
+        document.addEventListener('mouseup', handleMouseUp);
+
+        return () => {
+            document.removeEventListener('mousedown', handleMouseDown);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, []);
+
     const sdgStyles = `
     .sdg-user-tag {
         color: #005cc5;
@@ -658,6 +694,7 @@ export function TextEditor(): React.ReactElement {
                                         index={block.index}
                                         id={block.data.id}
                                         messages={block.data.messages}
+                                        metadata={block.data.metadata}
                                         onBlockClick={handleBlockClick}
                                     />
                                 ) : (
