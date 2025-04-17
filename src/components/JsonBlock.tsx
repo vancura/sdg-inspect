@@ -133,6 +133,7 @@ export const JsonBlock: React.FC<IJsonBlockProps> = ({ index, id, messages, meta
         }
     };
 
+    // noinspection FunctionWithMultipleReturnPointsJS
     return (
         <>
             <style>{jsonBlockStyles}</style>
@@ -151,7 +152,9 @@ export const JsonBlock: React.FC<IJsonBlockProps> = ({ index, id, messages, meta
 
                 <div className="json-content">
                     {messages.map((msg, msgIndex) => {
-                        if (!msg.content) return null;
+                        if (!msg.content) {
+                            return null;
+                        }
 
                         return (
                             <div className="mb-4 mt-2" key={msgIndex}>

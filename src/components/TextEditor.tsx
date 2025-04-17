@@ -1,16 +1,12 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { HighlightStyle } from '@codemirror/language';
-import { EditorState, Text } from '@codemirror/state';
+import { EditorState } from '@codemirror/state';
 import { EditorView, ViewUpdate, highlightActiveLine, keymap } from '@codemirror/view';
-import { tags } from '@lezer/highlight';
 import { useStore } from '@nanostores/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { $sdgStore, autoFormatContent, setContent } from '../stores/sdgStore.js';
 import { escapeHtml } from '../utils/htmlUtils.js';
 import { RESET_EVENT } from './InputActions.js';
 import { JsonBlock, JsonPlainBlock, jsonBlockStyles } from './JsonBlock.js';
-
-const jsonHighlightStyle = HighlightStyle.define([{ tag: tags.string, color: 'white' }]);
 
 /**
  * TextEditor component with CodeMirror for editing and previewing JSONL content.
@@ -19,13 +15,12 @@ const jsonHighlightStyle = HighlightStyle.define([{ tag: tags.string, color: 'wh
  * right panel with bidirectional highlighting.
  */
 export function TextEditor(): React.ReactElement {
-    const { content, formattedContent, isProcessing } = useStore($sdgStore);
+    const { content, formattedContent } = useStore($sdgStore);
     const editorRef = useRef<HTMLDivElement>(null);
     const editorViewRef = useRef<EditorView | null>(null);
     const previewRef = useRef<HTMLDivElement>(null);
     const debounceTimerRef = useRef<number | null>(null);
     const currentCursorPositionRef = useRef<number>(0);
-    const [isLoading, setIsLoading] = useState(true);
     const [currentLine, setCurrentLine] = useState<number>(1);
     const [debugMessage, setDebugMessage] = useState<string>('');
     const [parsedBlocks, setParsedBlocks] = useState<Array<any>>([]);
@@ -176,10 +171,6 @@ export function TextEditor(): React.ReactElement {
         },
         [content, debouncedFormatContent]
     );
-
-    const getLineNumberFromPosition = (doc: Text, position: number): number => {
-        return doc.lineAt(position).number - 1;
-    };
 
     const getLineStartPosition = useCallback((lineIndex: number): number => {
         if (!editorViewRef.current) return 0;
@@ -457,7 +448,7 @@ export function TextEditor(): React.ReactElement {
     useEffect(() => {
         if (!editorViewRef.current) return;
 
-        const handleEditorKeyEvents = (event: KeyboardEvent) => {
+        const handleEditorKeyEvents = () => {
             setTimeout(() => {
                 if (editorViewRef.current) {
                     const cursorPos = editorViewRef.current.state.selection.main.head;
@@ -502,6 +493,7 @@ export function TextEditor(): React.ReactElement {
         };
     }, [editorViewRef.current, handleCursorPositionChanged]);
 
+    // noinspection FunctionWithMultipleReturnPointsJS
     useEffect(() => {
         if (!editorViewRef.current) return;
 
