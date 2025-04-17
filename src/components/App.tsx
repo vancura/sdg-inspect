@@ -6,10 +6,6 @@ import { TextEditor } from './TextEditor.js';
 export function App(): React.ReactElement {
     return (
         <div className="flex h-screen w-screen flex-col">
-            <div className="bg-fuchsia-500 px-4 py-2 text-white">
-                <div className="mx-auto max-w-full">TOOLBAR</div>
-            </div>
-
             <div className="border-b border-gray-200">
                 <div className="flex items-center justify-between">
                     <InputActions />
