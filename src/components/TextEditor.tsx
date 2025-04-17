@@ -162,7 +162,7 @@ export function TextEditor(): React.ReactElement {
                 autoFormatContent();
             }
             debounceTimerRef.current = null;
-        }, 500); // 500ms debounce delay
+        }, 300); // Reduced from 500ms to 300ms for faster updates
     }, [content]);
 
     /** Handle content changes in the editor. */
@@ -290,7 +290,7 @@ export function TextEditor(): React.ReactElement {
                     block.setAttribute('data-source-line', (index + 1).toString());
                     block.id = `formatted-line-${index}`;
                 });
-            }, 100);
+            }, 50); // Reduced from 100ms to 50ms
 
             return () => {
                 clearTimeout(timerId);
@@ -327,7 +327,7 @@ export function TextEditor(): React.ReactElement {
                             selection: { anchor: linePos }
                         });
                     }
-                }, 10);
+                }, 5); // Reduced from 10ms to 5ms
             } catch (error) {
                 console.error('Error scrolling editor to line:', error);
             }
@@ -497,7 +497,7 @@ export function TextEditor(): React.ReactElement {
             setTimeout(() => {
                 const cursorPos = currentCursorPositionRef.current;
                 handleCursorPositionChanged(cursorPos);
-            }, 100);
+            }, 50); // Reduced from 100ms to 50ms
         }
     }, [formattedContent, handleCursorPositionChanged]);
 
@@ -514,7 +514,7 @@ export function TextEditor(): React.ReactElement {
                     const cursorPos = editorViewRef.current.state.selection.main.head;
                     handleCursorPositionChanged(cursorPos);
                 }
-            }, 10);
+            }, 5); // Reduced from 10ms to 5ms
         };
 
         // Get the editor DOM node
@@ -544,7 +544,7 @@ export function TextEditor(): React.ReactElement {
                     const cursorPos = editorViewRef.current.state.selection.main.head;
                     handleCursorPositionChanged(cursorPos);
                 }
-            }, 10);
+            }, 5); // Reduced from 10ms to 5ms
         };
 
         // Get the editor DOM node
@@ -643,8 +643,9 @@ export function TextEditor(): React.ReactElement {
             }
         };
 
-        // Set up an interval to poll cursor position every 1000ms (1 second)
-        const intervalId = setInterval(checkCursorPosition, 1000);
+        // Set up an interval to poll cursor position every 500ms (reduced from 1000ms)
+        // This provides a better balance between responsiveness and performance
+        const intervalId = setInterval(checkCursorPosition, 500);
 
         // Clean up
         return () => {
