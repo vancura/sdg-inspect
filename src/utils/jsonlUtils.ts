@@ -1,5 +1,3 @@
-import { meta } from 'yaml-eslint-parser';
-
 /**
  * Represents a structured object for SDG messages. It contains the contents of a message and the associated role of the
  * message sender or target.
@@ -109,7 +107,7 @@ function formatJSONLLine(line: string): string {
  * associated metadata.
  *
  * @param {ISDGData} parsedLine - The parsed SDG data containing messages and metadata.
- * @returns {void} This method does not return a value.
+ * @returns {void}
  */
 function processSDGContent(parsedLine: ISDGData): void {
     // Process messages to highlight Q&A pairs.
@@ -133,7 +131,7 @@ function processSDGContent(parsedLine: ISDGData): void {
  * applies formatting to specific fields, and then serializes the metadata back to a string.
  *
  * @param {ISDGData} parsedLine The input object containing a metadata field to be processed.
- * @returns {void} Returns nothing as the function modifies the parsedLine object directly.
+ * @returns {void}
  */
 function processMetadata(parsedLine: ISDGData): void {
     if (!(parsedLine.metadata ?? '')) {
