@@ -1,10 +1,10 @@
 {
     "name": "@vancura/sdg-inspect",
     "author": "Vaclav Vancura (https://github.com/vancura)",
-    "description": "A Vite-powered website with optimized assets and comprehensive build tooling",
+    "description": "A tool for inspecting, formatting, and visualizing SDG JSONL files",
     "version": "0.1.0",
     "type": "module",
-    "license": "UNLICENSED",
+    "license": "MIT",
     "scripts": {
         "dev": "cross-env NODE_ENV=development vite",
         "start": "cross-env NODE_ENV=development vite",
@@ -43,7 +43,6 @@
         "@types/node": "^20.17.30",
         "@types/react": "^19.1.2",
         "@types/react-dom": "^19.1.2",
-        "@types/rollup-plugin-visualizer": "^5.0.3",
         "@typescript-eslint/eslint-plugin": "^8.30.1",
         "@typescript-eslint/parser": "^8.30.1",
         "autoprefixer": "^10.4.21",

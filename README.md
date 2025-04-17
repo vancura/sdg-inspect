@@ -2,16 +2,15 @@
 
 A tool for inspecting, formatting, and visualizing SDG JSONL files. Designed for
 Subject Matter Experts (SMEs) at Red Hat's InstructLab to easily upload, format,
-analyze, and export SDG files.
+and analyze SDG files.
 
 ## Features
 
-- Upload or paste JSONL files with a streamlined interface
+- Upload JSONL files with a streamlined interface
+- Load example JSONL content with a single click
 - Format SDG JSONL content with syntax highlighting for Q&A pairs
-- Visually distinguishable user/assistant interactions
-- Resizable content viewer for better analysis of large files
-- Copy formatted content to clipboard with confirmation feedback
-- Save formatted content to a file with automatic `.jsonl` extension
+- Visually distinguishable user/assistant interactions with color-coding
+- Interactive highlighting with bidirectional sync between editor and preview
 - Clear functionality with complete state reset
 
 ## Setup
@@ -36,13 +35,14 @@ yarn preview
 
 1. **Load the application** by running `yarn dev` and opening the local URL
    (typically [http://localhost:3000](http://localhost:3000))
-2. **Upload an SDG JSONL file** using the "Upload SDG" button or by pasting content
-3. **Format the content** by clicking the "Inspect SDG" button
+2. **Upload an SDG JSONL file** using the "Upload" button or use the "Example"
+   button to load a sample file
+3. **View and edit** the JSONL content in the editor panel on the left
 4. **View the highlighted SDG content** with color-coded user/assistant
-   interaction pairs
-5. **Copy the formatted content** using the "Copy to Clipboard" button
-6. **Save the formatted content** using the "Save File" button
-7. **Clear the editor** using the "Clear" button to start over
+   interactions in the preview panel on the right
+5. **Navigate between views** by clicking on content in either panel, which automatically
+   synchronizes the position in both views
+6. **Clear the editor** using the red trash button to start over
 
 ### SDG JSONL format support
 
@@ -53,29 +53,33 @@ The application is designed specifically for SDG JSONL files with this structure
 - Messages often have `<|user|>` and `<|assistant|>` markers
 - Metadata may include information about the SDG document, domain, and dataset type
 
-### Testing features
+### Interactive features
 
 #### Expected results
 
-- The SDG JSONL content should be properly displayed in the editor
-- After formatting, content is organized with:
+- The SDG JSONL content is displayed in the editor with syntax highlighting
+- In the preview panel, content is organized with:
     - Blue highlighting for user questions
     - Green highlighting for assistant answers
-    - Proper metadata formatting
-- Question/Answer pairs are clearly distinguished with different background colors
-- Copy and Save functionality provide visual feedback when complete
+    - Proper metadata formatting with purple accents for SDG documents and domains
+- Question/Answer pairs are clearly distinguished with different background colors and borders
+- Clicking on an entry in either panel highlights and scrolls to the
+  corresponding content in the other panel
+- The active line in the editor is highlighted with a light background
 - Clear completely resets the editor to its initial state
 
-#### Resizable container feature
+#### Synchronized navigation
 
-1. After formatting, the content appears in a formatted view
-2. Drag the bottom-right corner of the container to resize it for better viewing
-3. A tooltip indicates the resize functionality is available
+1. Navigate through the editor using standard keyboard shortcuts
+2. As the cursor moves in the editor, the corresponding block in the preview
+   panel is highlighted
+3. Clicking on a block in the preview panel positions the cursor at the
+   corresponding line in the editor
 
 #### Example JSONL file
 
 The repository includes an `example.jsonl` file in the public directory for
-testing purposes.
+testing purposes, accessible via the "Example" button.
 
 ## Project structure
 
@@ -85,14 +89,15 @@ src/
 │   ├── App.tsx           # Main application component
 │   ├── Button.tsx        # Reusable button component with Solar icons
 │   ├── Icon.tsx          # Solar icon wrapper component
-│   ├── InputActions.tsx  # Upload and paste buttons
-│   ├── ResultActions.tsx # Format, copy, save buttons
-│   └── TextEditor.tsx    # JSONL editor with formatting support
+│   ├── InputActions.tsx  # Upload and example file buttons
+│   ├── JsonBlock.tsx     # Formatted JSON block components
+│   └── TextEditor.tsx    # JSONL editor with bidirectional sync
 ├── stores/               # Nanostores for state management
 │   └── sdgStore.ts       # Central store for application state
 ├── types/                # TypeScript type definitions
 │   └── index.ts          # Core type definitions
 ├── utils/                # Utility functions
+│   ├── htmlUtils.ts      # HTML-related utility functions
 │   └── jsonlUtils.ts     # JSONL formatting and highlighting utilities
 ├── main.ts               # Main entry point
 └── styles.css            # Global styles
@@ -106,6 +111,8 @@ src/
 - **Tailwind CSS**: Utility-first CSS framework for styling
 - **Nanostores**: Lightweight state management
 - **Solar Icons**: Modern icon set via Iconify integration
+- **CodeMirror 6**: Advanced code editor with syntax highlighting
+- **IBM Plex Fonts**: Sans and Mono fonts for clean typography
 
 ## Development features
 
@@ -141,10 +148,17 @@ yarn setup
 This will:
 
 1. Install all dependencies
-2. Configure VSCode for Yarn PnP
+2. Configure VSCode for Yarn PnP (Plug'n'Play)
 3. Set up TypeScript, ESLint, and Prettier integration
 
-## Available Scripts
+Alternatively, you can run:
+
+```bash
+# Install dependencies only
+yarn install
+```
+
+## Available scripts
 
 ### Development
 
