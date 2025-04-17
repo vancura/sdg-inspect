@@ -9,9 +9,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { $sdgStore, autoFormatContent, setContent } from '../stores/sdgStore.js';
 import { escapeHtml } from '../utils/htmlUtils.js';
 import { RESET_EVENT } from './InputActions.js';
-import { JsonBlock, JsonPlainBlock } from './JsonBlock.js';
+import { JsonBlock, JsonPlainBlock, jsonBlockStyles } from './JsonBlock.js';
 
-// Custom syntax highlighting theme
 const jsonHighlightStyle = HighlightStyle.define([
     { tag: tags.string, color: '#a11' },
     { tag: tags.number, color: '#164' },
@@ -56,7 +55,7 @@ export function TextEditor(): React.ReactElement {
                     json(),
                     keymap.of([...defaultKeymap, ...historyKeymap]),
                     syntaxHighlighting(jsonHighlightStyle),
-                    EditorView.lineWrapping, // Enable line wrapping
+                    EditorView.lineWrapping,
                     EditorView.theme({
                         '&': {
                             height: '100%',
@@ -73,7 +72,7 @@ export function TextEditor(): React.ReactElement {
                         '.cm-line': {
                             padding: '0 4px',
                             cursor: 'pointer',
-                            marginBottom: '4px' // Add space between lines
+                            marginBottom: '4px'
                         },
                         '.cm-activeLineGutter': {
                             backgroundColor: 'rgba(0, 0, 0, 0.04)'
@@ -85,7 +84,6 @@ export function TextEditor(): React.ReactElement {
                         '.cm-activeLine': {
                             backgroundColor: 'rgba(255, 255, 100, 0.1)'
                         },
-                        // Apply the same font to all text in the editor
                         '.cm-gutters': {
                             fontFamily: '"IBM Plex Mono", monospace !important'
                         }
@@ -136,7 +134,6 @@ export function TextEditor(): React.ReactElement {
         };
     }, [content, editorRef.current]);
 
-    /** Debounced function to format content after typing stops. */
     const debouncedFormatContent = useCallback(() => {
         if (debounceTimerRef.current) {
             window.clearTimeout(debounceTimerRef.current);
@@ -151,10 +148,9 @@ export function TextEditor(): React.ReactElement {
                 autoFormatContent();
             }
             debounceTimerRef.current = null;
-        }, 300); // Reduced from 500ms to 300ms for faster updates
+        }, 300);
     }, [content]);
 
-    /** Handle content changes in the editor. */
     const handleContentChange = useCallback(
         (newContent: string) => {
             if (newContent !== content) {
@@ -190,18 +186,16 @@ export function TextEditor(): React.ReactElement {
         [content, debouncedFormatContent]
     );
 
-    /** Convert position to line number in the editor */
     const getLineNumberFromPosition = (doc: Text, position: number): number => {
-        return doc.lineAt(position).number - 1; // 0-based index
+        return doc.lineAt(position).number - 1;
     };
 
-    /** Get the start position of a line */
     const getLineStartPosition = useCallback((lineIndex: number): number => {
         if (!editorViewRef.current) return 0;
 
         try {
             const doc = editorViewRef.current.state.doc;
-            const line = doc.line(lineIndex + 1); // Convert to 1-based
+            const line = doc.line(lineIndex + 1);
             return line.from;
         } catch (error) {
             console.error('Error getting line start position:', error);
@@ -209,7 +203,6 @@ export function TextEditor(): React.ReactElement {
         }
     }, []);
 
-    /** Clear all highlights in both editor and preview */
     const clearAllHighlights = () => {
         if (previewRef.current) {
             previewRef.current.querySelectorAll('.active-block, .preview-block-highlight').forEach((el) => {
@@ -219,7 +212,6 @@ export function TextEditor(): React.ReactElement {
         }
     };
 
-    /** Handle cursor position changes in the editor */
     const handleCursorPositionChanged = useCallback(
         (pos: number) => {
             if (!editorViewRef.current) return;
@@ -645,74 +637,6 @@ export function TextEditor(): React.ReactElement {
         border-radius: 4px;
     }
 
-    .json-block {
-        margin: 16px 0;
-        border: 1px solid #e1e4e8;
-        border-radius: 6px;
-        overflow: hidden;
-        position: relative;
-        font-family: "IBM Plex Mono", monospace;
-        cursor: pointer;
-        transition: all 0.15s ease-in-out;
-    }
-
-    .json-block:hover {
-        border-color: #0366d6;
-        box-shadow: 0 0 0 1px #0366d6;
-        transform: translateY(-2px);
-    }
-
-    .json-header {
-        background-color: #f6f8fa;
-        padding: 8px 12px;
-        border-bottom: 1px solid #e1e4e8;
-        font-family: "IBM Plex Mono", monospace;
-        font-size: 12px;
-        color: #586069;
-    }
-
-    .json-content {
-        padding: 12px;
-        background-color: white;
-    }
-
-    .active-block {
-        border-color: #0366d6;
-        box-shadow: 0 0 0 2px #0366d6;
-        background-color: rgba(3, 102, 214, 0.05);
-    }
-
-    .preview-block-highlight {
-        border: 3px solid #0366d6 !important;
-        box-shadow: 0 0 12px rgba(3, 102, 214, 0.7) !important;
-        background-color: rgba(3, 102, 214, 0.1) !important;
-        position: relative;
-        z-index: 1;
-        outline: none;
-        transform: translateZ(0);
-    }
-
-    .json-block.preview-block-highlight .json-header {
-        background-color: rgba(3, 102, 214, 0.2);
-        border-bottom: 2px solid #0366d6;
-        color: #0366d6;
-        font-weight: bold;
-    }
-
-    .json-block.preview-block-highlight:before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        height: 100%;
-        width: 6px;
-        background-color: #0366d6;
-    }
-
-    .json-block, pre {
-        cursor: pointer;
-    }
-
     .json-scroller {
         overflow-y: auto;
         scroll-behavior: smooth;
@@ -734,6 +658,7 @@ export function TextEditor(): React.ReactElement {
                 {formattedContent ? (
                     <div className="json-scroller relative h-full w-full overflow-y-auto px-4" ref={previewRef}>
                         <style>{sdgStyles}</style>
+                        <style>{jsonBlockStyles}</style>
                         <div className="w-full font-mono">
                             {parsedBlocks.map((block) =>
                                 block.type === 'sdg' ? (
