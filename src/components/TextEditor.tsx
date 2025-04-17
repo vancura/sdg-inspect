@@ -234,7 +234,6 @@ export function TextEditor(): React.ReactElement {
 
     useEffect(() => {
         if (formattedContent) {
-            // Parse the content to use with React components
             parseFormattedContent(formattedContent);
 
             const timerId = setTimeout(() => {
@@ -317,7 +316,6 @@ export function TextEditor(): React.ReactElement {
 
     useEffect(() => {
         const handlePreviewClick = (e: MouseEvent) => {
-            // Skip handling if text is being selected
             if (window.getSelection()?.toString()) {
                 return;
             }
@@ -403,7 +401,6 @@ export function TextEditor(): React.ReactElement {
 
     const handleBlockClick = useCallback(
         (blockId: string) => {
-            // Skip handling if text is being selected
             if (isSelectingRef.current || window.getSelection()?.toString()) {
                 return;
             }

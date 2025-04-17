@@ -110,18 +110,14 @@ function formatJSONLLine(line: string): string {
  * @returns {void}
  */
 function processSDGContent(parsedLine: ISDGData): void {
-    // Process messages to highlight Q&A pairs.
     if (parsedLine.messages && Array.isArray(parsedLine.messages)) {
         parsedLine.messages = parsedLine.messages.map((message: ISDGMessage) => {
             const content = message.content ?? '';
-
-            // Identify user/assistant patterns.
             message.content = highlightQnAPairs(content);
             return message;
         });
     }
 
-    // Process metadata if present.
     processMetadata(parsedLine);
 }
 
@@ -168,17 +164,14 @@ function processMetadata(parsedLine: ISDGData): void {
  * @returns {string} - The formatted string with styling applied to user, assistant, and their respective content.
  */
 function highlightQnAPairs(content: string): string {
-    // Check if content has user/assistant markers.
     if (!content.includes('<|user|>') && !content.includes('<|assistant|>')) {
         return content;
     }
 
-    // Add styling classes to user/assistant parts.
     let formattedContent = content
         .replace(/<\|user\|>/g, '<span class="sdg-user-tag">&lt;|user|&gt;</span>')
         .replace(/<\|assistant\|>/g, '<span class="sdg-assistant-tag">&lt;|assistant|&gt;</span>');
 
-    // Apply question and answer formatting.
     formattedContent = applyQuestionFormatting(formattedContent);
     formattedContent = applyAnswerFormatting(formattedContent);
 

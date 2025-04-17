@@ -25,10 +25,10 @@ export default defineConfig(({ mode }) => ({
     // Development server configuration.
     server: {
         port: 3000,
-        open: true, // automatically open browser
-        cors: true, // enable CORS
+        open: true,
+        cors: true,
         hmr: {
-            overlay: true // show errors as overlay
+            overlay: true
         }
     },
 
@@ -38,7 +38,7 @@ export default defineConfig(({ mode }) => ({
 
         // CommonJS dependencies optimization.
         commonjsOptions: {
-            include: [] // add CommonJS dependencies here if needed
+            include: []
         },
 
         // Code minification settings.
@@ -46,10 +46,10 @@ export default defineConfig(({ mode }) => ({
         terserOptions: {
             compress: {
                 // eslint-disable-next-line @typescript-eslint/naming-convention
-                drop_console: true, // remove console.logs
+                drop_console: true,
 
                 // eslint-disable-next-line @typescript-eslint/naming-convention
-                drop_debugger: true // remove debugger statements
+                drop_debugger: true
             }
         },
 
@@ -70,24 +70,24 @@ export default defineConfig(({ mode }) => ({
             }
         },
 
-        sourcemap: false, // disable sourcemaps in production
-        reportCompressedSize: true // report compressed file sizes
+        sourcemap: false,
+        reportCompressedSize: true
     },
 
     // Dependency optimization.
     optimizeDeps: {
-        include: [] // add dependencies that need pre-bundling
+        include: []
     },
 
     // Asset handling.
-    assetsInclude: ['**/*.svg'], // treat SVGs as assets
+    assetsInclude: ['**/*.svg'],
 
     // CSS configuration.
     css: {
         modules: {
-            localsConvention: 'camelCase' // use camelCase for CSS modules
+            localsConvention: 'camelCase'
         },
-        devSourcemap: true // enable CSS sourcemaps in development
+        devSourcemap: true
     },
 
     // Plugin configuration.
@@ -106,23 +106,23 @@ export default defineConfig(({ mode }) => ({
         ViteImageOptimizer({
             test: /\.(?<imageExt>jpe?g|png|gif|tiff|webp|svg|avif)$/i,
 
-            includePublic: true, // also optimize images in public/
-            logStats: true, // log optimization stats
+            includePublic: true,
+            logStats: true,
             svg: {
-                multipass: true, // multiple optimization passes
+                multipass: true,
                 plugins: [
                     {
                         name: 'preset-default',
                         params: {
                             overrides: {
-                                removeViewBox: false, // keep viewBox for scaling
+                                removeViewBox: false,
                                 cleanupNumericValues: false,
                                 cleanupIds: false,
                                 convertPathData: false
                             }
                         }
                     },
-                    'sortAttrs', // sort attributes for better compression
+                    'sortAttrs',
                     {
                         name: 'addAttributesToSVGElement',
                         params: {
@@ -166,9 +166,9 @@ export default defineConfig(({ mode }) => ({
         mode === 'analyze' &&
             // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             visualizer({
-                open: true, // open analyzer in browser
-                gzipSize: true, // show gzip sizes
-                brotliSize: true, // show brotli sizes
+                open: true,
+                gzipSize: true,
+                brotliSize: true,
                 filename: '.stats/stats.html'
             })(),
 
