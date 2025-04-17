@@ -794,17 +794,6 @@ export function TextEditor(): React.ReactElement {
         <div className="relative flex h-full w-full font-sans">
             {/* Left column - CodeMirror editor */}
             <div className="flex h-full w-1/3 flex-col border-r border-fuchsia-300 p-4">
-                <div className="mb-2 flex justify-between">
-                    <div>
-                        {content && (
-                            <div className="text-xs">
-                                <span className="font-medium text-green-600">Live Preview Enabled</span>
-                                {isProcessing && <span className="ml-2 text-amber-600">Updating preview...</span>}
-                            </div>
-                        )}
-                    </div>
-                </div>
-
                 <div
                     ref={editorRef}
                     className="flex-1 overflow-hidden rounded-md border border-gray-300 font-mono text-sm"
