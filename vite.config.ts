@@ -176,7 +176,7 @@ export default defineConfig(({ mode }) => ({
             entry: '/src/main.ts',
             inject: {
                 data: {
-                    title: 'WS playground',
+                    title: 'A tool for inspecting, formatting, and visualizing SDG JSONL files',
                     injectScript: `<script src="./inject.js"></script>`
                 }
             },
