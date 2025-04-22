@@ -28,7 +28,11 @@ const config = {
         }
     },
 
-    plugins: []
+    plugins: [
+        function ({ addVariant }) {
+            addVariant('preview-block-highlight', '.preview-block-highlight &');
+        }
+    ]
 };
 
 module.exports = config;
