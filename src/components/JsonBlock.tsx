@@ -11,7 +11,7 @@ const Block: React.FC<IBlockProps> = ({
     className = '',
     children
 }) => {
-    const blockId = externalBlockId || getBlockId(index);
+    const blockId = externalBlockId ?? getBlockId(index);
     const isSelectingRef = useRef(false);
 
     const handleMouseDown = useCallback(() => {

@@ -35,6 +35,7 @@ export const parseMetadata = (metadata?: string): Record<string, any> | null => 
     try {
         return JSON.parse(metadata);
     } catch (e) {
+        // eslint-disable-next-line no-undef
         console.error('Failed to parse metadata:', e);
         return null;
     }
