@@ -90,7 +90,7 @@ src/
 │   ├── Button.tsx        # Reusable button component with Solar icons
 │   ├── Icon.tsx          # Solar icon wrapper component
 │   ├── InputActions.tsx  # Upload and example file buttons
-│   ├── JsonBlock.tsx     # Formatted JSON block components
+│   ├── PreviewBlock.tsx     # Formatted JSON block components
 │   └── TextEditor.tsx    # JSONL editor with bidirectional sync
 ├── stores/               # Nanostores for state management
 │   └── sdgStore.ts       # Central store for application state

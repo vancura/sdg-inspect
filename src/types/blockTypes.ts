@@ -24,8 +24,8 @@ export interface IBlockProps {
     children: ReactNode;
 }
 
-/** Props for the JsonBlock component. */
-export interface IJsonBlockProps {
+/** Props for the PreviewBlock component. */
+export interface IPreviewBlockProps {
     /** The index of the block. */
     index: number;
 
@@ -48,8 +48,8 @@ export interface IJsonBlockProps {
     onBlockClick: (blockId: string) => void;
 }
 
-/** Props for the JsonPlainBlock component. */
-export interface IJsonPlainBlockProps {
+/** Props for the PreviewPlainBlock component. */
+export interface IPreviewPlainBlockProps {
     /** The index of the block. */
     index: number;
 

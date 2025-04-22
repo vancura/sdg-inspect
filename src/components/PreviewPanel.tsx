@@ -1,7 +1,7 @@
 import React from 'react';
 import type { IPlainBlock, IPreviewPanelProps, ISdgBlock } from '../types/editorTypes.js';
 import { escapeHtml } from '../utils/htmlUtils.js';
-import { JsonBlock, JsonPlainBlock, jsonBlockStyles, sdgStyles } from './JsonBlock.js';
+import { PreviewBlock, PreviewPlainBlock, previewBlockStyles, sdgStyles } from './PreviewBlock.js';
 
 /**
  * PreviewPanel component for displaying formatted JSONL content.
@@ -24,14 +24,14 @@ export function PreviewPanel({
     }
 
     return (
-        <div className="json-scroller relative h-full w-full overflow-y-auto px-4" ref={previewRef}>
+        <div className="preview-scroller relative h-full w-full overflow-y-auto px-4" ref={previewRef}>
             <style>{sdgStyles}</style>
-            <style>{jsonBlockStyles}</style>
+            <style>{previewBlockStyles}</style>
 
             <div className="w-full font-mono">
                 {parsedBlocks.map((block) =>
                     block.type === 'sdg' ? (
-                        <JsonBlock
+                        <PreviewBlock
                             key={block.index}
                             index={block.index}
                             id={(block as ISdgBlock).data.id}
@@ -40,7 +40,7 @@ export function PreviewPanel({
                             onBlockClick={onBlockClick}
                         />
                     ) : (
-                        <JsonPlainBlock
+                        <PreviewPlainBlock
                             key={block.index}
                             index={block.index}
                             content={escapeHtml((block as IPlainBlock).data)}

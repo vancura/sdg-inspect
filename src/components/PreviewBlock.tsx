@@ -1,5 +1,5 @@
 import React, { useCallback, useRef } from 'react';
-import type { IBlockProps, IJsonBlockProps, IJsonPlainBlockProps } from '../types/blockTypes.js';
+import type { IBlockProps, IPreviewBlockProps, IPreviewPlainBlockProps } from '../types/blockTypes.js';
 import { getBlockId, isTextSelected, parseMetadata, stripHtmlTags } from '../utils/blockUtils.js';
 
 /** Block component - handles both standard and pre blocks. */
@@ -78,7 +78,7 @@ const MetadataSection: React.FC<{ metadata: Record<string, any> }> = ({ metadata
 );
 
 // Export the CSS classes for the TextEditor to access.
-export const jsonBlockStyles = `
+export const previewBlockStyles = `
 .preview-block-highlight pre {
     background-color: rgba(255, 255, 255, 0.9);
 }
@@ -142,19 +142,19 @@ export const sdgStyles = `
     border-radius: 4px;
 }
 
-.json-scroller {
+.preview-scroller {
     overflow-y: auto;
     scroll-behavior: smooth;
     height: 100%;
 }
 `;
 
-/** JsonBlock component for displaying SDG entries in a formatted block. */
-export const JsonBlock: React.FC<IJsonBlockProps> = ({ index, id, messages, metadata, onBlockClick }) => {
+/** PreviewBlock component for displaying SDG entries in a formatted block. */
+export const PreviewBlock: React.FC<IPreviewBlockProps> = ({ index, id, messages, metadata, onBlockClick }) => {
     const parsedMetadata = parseMetadata(metadata);
 
     return (
-        <Block index={index} onBlockClick={onBlockClick} className="json-block relative mb-4 font-mono">
+        <Block index={index} onBlockClick={onBlockClick} className="preview-block relative mb-4 font-mono">
             <div className="preview-block-highlight:bg-text-editor-bg border-b border-gray-300 bg-text-editor-bg/80 px-4 py-3 font-sans text-sm font-medium text-black">
                 SDG Entry #{index + 1}
             </div>
@@ -181,8 +181,8 @@ export const JsonBlock: React.FC<IJsonBlockProps> = ({ index, id, messages, meta
     );
 };
 
-/** JsonPlainBlock component for displaying non-SDG entries as preformatted text. */
-export const JsonPlainBlock: React.FC<IJsonPlainBlockProps> = ({ index, content, onBlockClick }) => {
+/** PreviewPlainBlock component for displaying non-SDG entries as preformatted text. */
+export const PreviewPlainBlock: React.FC<IPreviewPlainBlockProps> = ({ index, content, onBlockClick }) => {
     return (
         <Block index={index} onBlockClick={onBlockClick} blockType="pre">
             {content}

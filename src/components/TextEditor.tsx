@@ -247,7 +247,7 @@ export function TextEditor(): React.ReactElement {
             }
 
             const target = e.target as HTMLElement;
-            const blockElement = target.closest('.json-block, pre') as HTMLElement | null;
+            const blockElement = target.closest('.preview-block, pre') as HTMLElement | null;
 
             if (blockElement && previewRef.current) {
                 e.preventDefault();
@@ -255,7 +255,7 @@ export function TextEditor(): React.ReactElement {
 
                 syncElementWithEditor(blockElement);
             } else {
-                console.error('No .json-block or pre element found');
+                console.error('No .preview-block or pre element found');
             }
         };
 
@@ -311,7 +311,7 @@ export function TextEditor(): React.ReactElement {
             parseFormattedContent(formattedContent);
 
             const timerId = setTimeout(() => {
-                document.querySelectorAll('.json-block, pre').forEach((block, index) => {
+                document.querySelectorAll('.preview-block, pre').forEach((block, index) => {
                     block.setAttribute('data-line-index', index.toString());
                     block.setAttribute('data-source-line', (index + 1).toString());
                     block.id = `formatted-line-${index}`;
