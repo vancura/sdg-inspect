@@ -1,3 +1,6 @@
+import type { EditorView } from '@codemirror/view';
+import type { RefObject } from 'react';
+
 /** Base interface for parsed blocks. */
 export interface IParsedBlock {
     /** Block type - sdg or plain. */
@@ -72,3 +75,48 @@ export const EditorStyles = {
     /** Font family with !important flag. */
     FONT_FAMILY_IMPORTANT: '"IBM Plex Mono", monospace !important'
 } as const;
+
+/** Type for editor sync functions. */
+export interface IEditorSyncFunctions {
+    /** Function to sync preview element with editor. */
+    syncElementWithEditor: (element: HTMLElement) => void;
+
+    /** Function to scroll editor to a specific line. */
+    scrollEditorToLine: (lineNumber: number) => void;
+
+    /** Function to get line start position for navigation. */
+    getLineStartPosition: (lineIndex: number) => number;
+
+    /** Function to handle cursor position changes. */
+    handleCursorPositionChanged: (position: number) => void;
+}
+
+/** Props for the EditorPanel component. */
+export interface IEditorPanelProps {
+    /** Current content to display in the editor. */
+    content: string;
+
+    /** Called when content changes. */
+    onContentChange: (content: string) => void;
+
+    /** Called when cursor position changes. */
+    onCursorChange: (position: number) => void;
+
+    /** Called when the editor is initialized with the editor instance. */
+    onEditorReady: (editorRef: { current: EditorView | null }) => void;
+}
+
+/** Props for the PreviewPanel component. */
+export interface IPreviewPanelProps {
+    /** Formatted content to display. */
+    formattedContent: string;
+
+    /** Parsed blocks from the content. */
+    parsedBlocks: Array<IParsedBlock>;
+
+    /** Callback for when a block is clicked. */
+    onBlockClick: (blockId: string) => void;
+
+    /** Ref to the preview container for scrolling and highlighting. */
+    previewRef: RefObject<HTMLDivElement>;
+}
