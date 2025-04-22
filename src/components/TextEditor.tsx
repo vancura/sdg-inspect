@@ -1,13 +1,51 @@
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { EditorState } from '@codemirror/state';
-import { EditorView, ViewUpdate, highlightActiveLine, keymap } from '@codemirror/view';
+import { EditorView, highlightActiveLine, keymap, ViewUpdate } from '@codemirror/view';
 import { useStore } from '@nanostores/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { $sdgStore, autoFormatContent, setContent } from '../stores/sdgStore.js';
 import { escapeHtml } from '../utils/htmlUtils.js';
 import { RESET_EVENT } from './InputActions.js';
-import { JsonBlock, JsonPlainBlock, jsonBlockStyles } from './JsonBlock.js';
+import { JsonBlock, jsonBlockStyles, JsonPlainBlock } from './JsonBlock.js';
 
+// Timing constants
+const IMMEDIATE_TIMEOUT = 0;
+const SHORT_TIMEOUT = 5;
+const MEDIUM_TIMEOUT = 50;
+const LONG_TIMEOUT = 300;
+const CURSOR_CHECK_INTERVAL = 500;
+const SELECTION_CHECK_TIMEOUT = 10;
+
+// Editor style constants
+const FONT_FAMILY = '"IBM Plex Mono", monospace';
+const FONT_FAMILY_IMPORTANT = `${FONT_FAMILY} !important`;
+
+// Type definitions for parsed content
+interface ParsedBlock {
+    type: 'sdg' | 'plain';
+    data: any;
+    index: number;
+}
+
+interface SdgBlock extends ParsedBlock {
+    type: 'sdg';
+    data: {
+        id: string;
+        messages: Array<any>;
+        metadata?: any;
+    };
+}
+
+interface PlainBlock extends ParsedBlock {
+    type: 'plain';
+    data: string;
+}
+
+// Type for event handlers
+type EditorEventHandler = (event: Event) => void;
+type TypedEventListener<K extends keyof HTMLElementEventMap> = (event: HTMLElementEventMap[K]) => void;
+
+// noinspection FunctionNamingConventionJS
 /**
  * TextEditor component with CodeMirror for editing and previewing JSONL content.
  *
@@ -21,14 +59,66 @@ export function TextEditor(): React.ReactElement {
     const previewRef = useRef<HTMLDivElement>(null);
     const debounceTimerRef = useRef<number | null>(null);
     const currentCursorPositionRef = useRef<number>(0);
-    const [currentLine, setCurrentLine] = useState<number>(1);
-    const [parsedBlocks, setParsedBlocks] = useState<Array<any>>([]);
+    const currentLineRef = useRef<number>(1);
+    const [parsedBlocks, setParsedBlocks] = useState<Array<ParsedBlock>>([]);
     const isSelectingRef = useRef(false);
 
-    useEffect(() => {
-        if (!editorRef.current) return;
+    // Check if text is currently selected
+    const isTextSelected = useCallback((): boolean => {
+        return isSelectingRef.current || !!window.getSelection()?.toString();
+    }, []);
 
-        if (!editorViewRef.current) {
+    const ensureEditorFocus = useCallback((timeout = IMMEDIATE_TIMEOUT) => {
+        setTimeout(() => {
+            if (editorViewRef.current) {
+                editorViewRef.current.focus();
+            }
+        }, timeout);
+    }, []);
+
+    // Clear any active timeout safely
+    const clearTimeout = useCallback((timerRef: React.MutableRefObject<number | null>) => {
+        if (timerRef.current !== null) {
+            window.clearTimeout(timerRef.current);
+            timerRef.current = null;
+        }
+    }, []);
+
+    // Clear any active interval safely
+    const clearInterval = useCallback((intervalRef: ReturnType<typeof window.setInterval>) => {
+        if (intervalRef) {
+            window.clearInterval(intervalRef);
+        }
+    }, []);
+
+    // Safely get element by ID with type checking
+    const getElementById = useCallback<(id: string) => HTMLElement | null>((id: string) => {
+        const element = document.getElementById(id);
+        return element;
+    }, []);
+
+    // noinspection FunctionWithInconsistentReturnsJS,FunctionWithMultipleReturnPointsJS
+    useEffect(() => {
+        if (!editorRef.current) {
+            return;
+        }
+
+        if (editorViewRef.current) {
+            if (content !== editorViewRef.current.state.doc.toString()) {
+                const currentPos = currentCursorPositionRef.current;
+
+                editorViewRef.current.dispatch({
+                    changes: {
+                        from: 0,
+                        to: editorViewRef.current.state.doc.length,
+                        insert: content
+                    },
+                    selection: { anchor: Math.min(currentPos, content.length) }
+                });
+
+                ensureEditorFocus();
+            }
+        } else {
             const state = EditorState.create({
                 doc: content,
                 extensions: [
@@ -41,12 +131,12 @@ export function TextEditor(): React.ReactElement {
                             height: '100%',
                             fontSize: '12px',
                             lineHeight: '1.2',
-                            fontFamily: '"IBM Plex Mono", monospace !important'
+                            fontFamily: FONT_FAMILY_IMPORTANT
                         },
 
                         '.cm-scroller': {
                             overflow: 'auto',
-                            fontFamily: '"IBM Plex Mono", monospace !important'
+                            fontFamily: FONT_FAMILY_IMPORTANT
                         },
 
                         '&.cm-editor.cm-focused': {
@@ -66,11 +156,11 @@ export function TextEditor(): React.ReactElement {
 
                         '.cm-content': {
                             padding: '0',
-                            fontFamily: '"IBM Plex Mono", monospace !important'
+                            fontFamily: FONT_FAMILY_IMPORTANT
                         },
 
                         '.cm-gutters': {
-                            fontFamily: '"IBM Plex Mono", monospace !important'
+                            fontFamily: FONT_FAMILY_IMPORTANT
                         }
                     }),
                     EditorView.updateListener.of((update: ViewUpdate) => {
@@ -86,29 +176,10 @@ export function TextEditor(): React.ReactElement {
                 ]
             });
 
-            const view = new EditorView({
+            editorViewRef.current = new EditorView({
                 state,
                 parent: editorRef.current
             });
-
-            editorViewRef.current = view;
-        } else if (content !== editorViewRef.current.state.doc.toString()) {
-            const currentPos = currentCursorPositionRef.current;
-
-            editorViewRef.current.dispatch({
-                changes: {
-                    from: 0,
-                    to: editorViewRef.current.state.doc.length,
-                    insert: content
-                },
-                selection: { anchor: Math.min(currentPos, content.length) }
-            });
-
-            setTimeout(() => {
-                if (editorViewRef.current) {
-                    editorViewRef.current.focus();
-                }
-            }, 0);
         }
 
         return () => {
@@ -117,12 +188,10 @@ export function TextEditor(): React.ReactElement {
                 editorViewRef.current = null;
             }
         };
-    }, [content, editorRef.current]);
+    }, [content, editorRef.current, ensureEditorFocus]);
 
     const debouncedFormatContent = useCallback(() => {
-        if (debounceTimerRef.current) {
-            window.clearTimeout(debounceTimerRef.current);
-        }
+        clearTimeout(debounceTimerRef);
 
         debounceTimerRef.current = window.setTimeout(() => {
             if (content.trim()) {
@@ -133,8 +202,8 @@ export function TextEditor(): React.ReactElement {
                 autoFormatContent();
             }
             debounceTimerRef.current = null;
-        }, 300);
-    }, [content]);
+        }, LONG_TIMEOUT);
+    }, [content, clearTimeout]);
 
     const handleContentChange = useCallback(
         (newContent: string) => {
@@ -144,10 +213,10 @@ export function TextEditor(): React.ReactElement {
 
                 setContent(newContent);
 
-                if (!newContent.trim()) {
-                    setTimeout(() => autoFormatContent(), 0);
-                } else {
+                if (newContent.trim()) {
                     debouncedFormatContent();
+                } else {
+                    setTimeout(() => autoFormatContent(), IMMEDIATE_TIMEOUT);
                 }
 
                 if (editorViewRef.current) {
@@ -162,17 +231,28 @@ export function TextEditor(): React.ReactElement {
                                 selection: { anchor: newPos }
                             });
 
-                            editorViewRef.current.focus();
+                            ensureEditorFocus();
                         }
-                    }, 0);
+                    }, IMMEDIATE_TIMEOUT);
                 }
             }
         },
-        [content, debouncedFormatContent]
+        [content, debouncedFormatContent, ensureEditorFocus]
     );
 
+    const clearAllHighlights = useCallback(() => {
+        if (previewRef.current) {
+            previewRef.current.querySelectorAll('.preview-block-highlight').forEach((el) => {
+                el.classList.remove('preview-block-highlight');
+            });
+        }
+    }, [previewRef.current]);
+
+    // noinspection FunctionWithMultipleReturnPointsJS
     const getLineStartPosition = useCallback((lineIndex: number): number => {
-        if (!editorViewRef.current) return 0;
+        if (!editorViewRef.current) {
+            return 0;
+        }
 
         try {
             const doc = editorViewRef.current.state.doc;
@@ -184,42 +264,39 @@ export function TextEditor(): React.ReactElement {
         }
     }, []);
 
-    const clearAllHighlights = () => {
-        if (previewRef.current) {
-            previewRef.current.querySelectorAll('.preview-block-highlight').forEach((el) => {
-                el.classList.remove('preview-block-highlight');
-            });
-        }
-    };
+    const scrollElementIntoView = useCallback((element: Element) => {
+        element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }, []);
 
+    // noinspection FunctionWithMultipleReturnPointsJS
     const handleCursorPositionChanged = useCallback(
         (pos: number) => {
-            if (!editorViewRef.current) return;
+            if (!editorViewRef.current) {
+                return;
+            }
 
             const line = editorViewRef.current.state.doc.lineAt(pos);
             const lineNumber = line.number;
 
-            setCurrentLine(lineNumber);
+            currentLineRef.current = lineNumber;
 
             if (previewRef.current) {
-                previewRef.current.querySelectorAll('.preview-block-highlight').forEach((el) => {
-                    el.classList.remove('preview-block-highlight');
-                });
+                clearAllHighlights();
 
                 const sourceElement = previewRef.current.querySelector(`[data-source-line="${lineNumber}"]`);
                 if (sourceElement) {
                     sourceElement.classList.add('preview-block-highlight');
-
-                    sourceElement.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
+                    scrollElementIntoView(sourceElement);
                 }
             }
         },
-        [previewRef.current, setCurrentLine, setDebugMessage]
+        [previewRef.current, clearAllHighlights, scrollElementIntoView]
     );
 
+    // noinspection FunctionWithMultipleReturnPointsJS
     useEffect(() => {
         if (formattedContent) {
             parseFormattedContent(formattedContent);
@@ -230,44 +307,58 @@ export function TextEditor(): React.ReactElement {
                     block.setAttribute('data-source-line', (index + 1).toString());
                     block.id = `formatted-line-${index}`;
                 });
-            }, 50);
+            }, MEDIUM_TIMEOUT);
 
             return () => {
-                clearTimeout(timerId);
+                window.clearTimeout(timerId);
             };
         } else if (!formattedContent && previewRef.current) {
             setParsedBlocks([]);
+            // noinspection InnerHTMLJS
             previewRef.current.innerHTML = '';
         }
+
+        return undefined;
     }, [formattedContent]);
 
-    const parseFormattedContent = (content: string) => {
+    // Add error handling for JSON parsing
+    const safeJsonParse = useCallback(<T,>(json: string, fallback: T): T => {
+        try {
+            return JSON.parse(json);
+        } catch (error) {
+            console.error('Error parsing JSON:', error);
+            return fallback;
+        }
+    }, []);
+
+    // Parse the formatted content into structured blocks
+    const parseFormattedContent = (content: string): void => {
         if (!content) {
             setParsedBlocks([]);
             return;
         }
 
-        const blocks = content.split('\n').map((line, index) => {
+        const blocks = content.split('\n').map((line, index): ParsedBlock => {
             try {
-                const obj = JSON.parse(line);
-                if (obj.messages && Array.isArray(obj.messages)) {
+                const obj = safeJsonParse<any>(line, null);
+                if (obj && obj.messages && Array.isArray(obj.messages)) {
                     return {
                         type: 'sdg',
                         data: obj,
                         index
-                    };
+                    } as SdgBlock;
                 }
                 return {
                     type: 'plain',
                     data: line,
                     index
-                };
+                } as PlainBlock;
             } catch {
                 return {
                     type: 'plain',
                     data: line,
                     index
-                };
+                } as PlainBlock;
             }
         });
 
@@ -276,7 +367,9 @@ export function TextEditor(): React.ReactElement {
 
     const scrollEditorToLine = useCallback(
         (lineNumber: number) => {
-            if (!editorViewRef.current) return;
+            if (!editorViewRef.current) {
+                return;
+            }
 
             try {
                 const line = editorViewRef.current.state.doc.line(lineNumber);
@@ -294,7 +387,7 @@ export function TextEditor(): React.ReactElement {
                             selection: { anchor: linePos }
                         });
                     }
-                }, 5);
+                }, SHORT_TIMEOUT);
             } catch (error) {
                 console.error('Error scrolling editor to line:', error);
             }
@@ -302,9 +395,52 @@ export function TextEditor(): React.ReactElement {
         [editorViewRef.current]
     );
 
+    // Sync an element from preview with editor position
+    const syncElementWithEditor = useCallback(
+        (element: HTMLElement) => {
+            if (!element || !previewRef.current || isTextSelected()) {
+                return;
+            }
+
+            // Clear existing highlights
+            clearAllHighlights();
+
+            // Add highlight to the element
+            element.classList.add('preview-block-highlight');
+
+            // Scroll the element into view
+            scrollElementIntoView(element);
+
+            // Get line index and sync with editor
+            const lineIndex = parseInt(element.getAttribute('data-line-index') ?? '0', 10);
+            if (editorViewRef.current) {
+                const pos = getLineStartPosition(lineIndex);
+
+                editorViewRef.current.dispatch({
+                    selection: { anchor: pos, head: pos }
+                });
+
+                ensureEditorFocus();
+                scrollEditorToLine(lineIndex + 1);
+                handleCursorPositionChanged(pos);
+            }
+        },
+        [
+            previewRef.current,
+            isTextSelected,
+            editorViewRef.current,
+            getLineStartPosition,
+            scrollEditorToLine,
+            handleCursorPositionChanged,
+            clearAllHighlights,
+            scrollElementIntoView,
+            ensureEditorFocus
+        ]
+    );
+
     useEffect(() => {
-        const handlePreviewClick = (e: MouseEvent) => {
-            if (window.getSelection()?.toString()) {
+        const handlePreviewClick: TypedEventListener<'click'> = (e) => {
+            if (isTextSelected()) {
                 return;
             }
 
@@ -315,30 +451,7 @@ export function TextEditor(): React.ReactElement {
                 e.preventDefault();
                 e.stopPropagation();
 
-                previewRef.current.querySelectorAll('.preview-block-highlight').forEach((el) => {
-                    el.classList.remove('preview-block-highlight');
-                });
-
-                blockElement.classList.add('preview-block-highlight');
-
-                const lineIndex = parseInt(blockElement.getAttribute('data-line-index') || '0', 10);
-
-                blockElement.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-
-                if (editorViewRef.current) {
-                    const pos = getLineStartPosition(lineIndex);
-
-                    editorViewRef.current.dispatch({
-                        selection: { anchor: pos, head: pos }
-                    });
-
-                    editorViewRef.current.focus();
-                    scrollEditorToLine(lineIndex + 1);
-                    handleCursorPositionChanged(pos);
-                }
+                syncElementWithEditor(blockElement);
             } else {
                 console.error('No .json-block or pre element found');
             }
@@ -346,16 +459,16 @@ export function TextEditor(): React.ReactElement {
 
         const previewElement = previewRef.current;
         if (previewElement) {
-            previewElement.removeEventListener('click', handlePreviewClick as EventListener);
-            previewElement.addEventListener('click', handlePreviewClick as EventListener);
+            previewElement.removeEventListener('click', handlePreviewClick);
+            previewElement.addEventListener('click', handlePreviewClick);
         }
 
         return () => {
             if (previewElement) {
-                previewElement.removeEventListener('click', handlePreviewClick as EventListener);
+                previewElement.removeEventListener('click', handlePreviewClick);
             }
         };
-    }, [previewRef.current, getLineStartPosition, handleCursorPositionChanged, scrollEditorToLine]);
+    }, [previewRef.current, syncElementWithEditor, isTextSelected]);
 
     useEffect(() => {
         const handleReset = (): void => {
@@ -376,46 +489,23 @@ export function TextEditor(): React.ReactElement {
 
         return () => {
             document.removeEventListener(RESET_EVENT, handleReset);
-            if (debounceTimerRef.current) {
-                window.clearTimeout(debounceTimerRef.current);
-            }
+            clearTimeout(debounceTimerRef);
         };
-    }, []);
+    }, [clearAllHighlights, clearTimeout]);
 
+    // noinspection FunctionWithMultipleReturnPointsJS
     const handleBlockClick = useCallback(
         (blockId: string) => {
-            if (isSelectingRef.current || window.getSelection()?.toString()) {
+            if (isTextSelected()) {
                 return;
             }
 
-            const element = document.getElementById(blockId);
+            const element = getElementById(blockId);
             if (element && previewRef.current) {
-                previewRef.current.querySelectorAll('.preview-block-highlight').forEach((el) => {
-                    el.classList.remove('preview-block-highlight');
-                });
-
-                element.classList.add('preview-block-highlight');
-
-                element.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-
-                const lineIndex = parseInt(element.getAttribute('data-line-index') || '0', 10);
-                if (editorViewRef.current) {
-                    const pos = getLineStartPosition(lineIndex);
-
-                    editorViewRef.current.dispatch({
-                        selection: { anchor: pos, head: pos }
-                    });
-
-                    editorViewRef.current.focus();
-                    scrollEditorToLine(lineIndex + 1);
-                    handleCursorPositionChanged(pos);
-                }
+                syncElementWithEditor(element);
             }
         },
-        [previewRef.current, getLineStartPosition, scrollEditorToLine, handleCursorPositionChanged, isSelectingRef]
+        [syncElementWithEditor, isTextSelected, getElementById]
     );
 
     useEffect(() => {
@@ -431,104 +521,64 @@ export function TextEditor(): React.ReactElement {
             setTimeout(() => {
                 const cursorPos = currentCursorPositionRef.current;
                 handleCursorPositionChanged(cursorPos);
-            }, 50);
+            }, MEDIUM_TIMEOUT);
         }
     }, [formattedContent, handleCursorPositionChanged]);
 
-    useEffect(() => {
-        if (!editorViewRef.current) return;
+    const addEditorEventListeners = useCallback(
+        (eventTypes: Array<keyof HTMLElementEventMap>, timeout = SHORT_TIMEOUT, filter?: (event: Event) => boolean) => {
+            if (!editorViewRef.current) return () => {};
 
-        const handleEditorKeyEvents = () => {
-            setTimeout(() => {
-                if (editorViewRef.current) {
-                    const cursorPos = editorViewRef.current.state.selection.main.head;
-                    handleCursorPositionChanged(cursorPos);
-                }
-            }, 5);
-        };
+            const handleEditorEvent: EditorEventHandler = (event: Event) => {
+                if (filter && !filter(event)) return;
 
-        const editorDom = editorViewRef.current.dom;
-
-        editorDom.addEventListener('keydown', handleEditorKeyEvents);
-        editorDom.addEventListener('keyup', handleEditorKeyEvents);
-
-        return () => {
-            editorDom.removeEventListener('keydown', handleEditorKeyEvents);
-            editorDom.removeEventListener('keyup', handleEditorKeyEvents);
-        };
-    }, [editorViewRef.current, handleCursorPositionChanged]);
-
-    useEffect(() => {
-        if (!editorViewRef.current) return;
-
-        const handleEditorMouseEvents = () => {
-            setTimeout(() => {
-                if (editorViewRef.current) {
-                    const cursorPos = editorViewRef.current.state.selection.main.head;
-                    handleCursorPositionChanged(cursorPos);
-                }
-            }, 5);
-        };
-
-        const editorDom = editorViewRef.current.dom;
-
-        editorDom.addEventListener('mouseup', handleEditorMouseEvents);
-        editorDom.addEventListener('mousedown', handleEditorMouseEvents);
-        editorDom.addEventListener('click', handleEditorMouseEvents);
-
-        return () => {
-            editorDom.removeEventListener('mouseup', handleEditorMouseEvents);
-            editorDom.removeEventListener('mousedown', handleEditorMouseEvents);
-            editorDom.removeEventListener('click', handleEditorMouseEvents);
-        };
-    }, [editorViewRef.current, handleCursorPositionChanged]);
-
-    // noinspection FunctionWithMultipleReturnPointsJS
-    useEffect(() => {
-        if (!editorViewRef.current) return;
-
-        const handleEditorFocus = () => {
-            if (editorViewRef.current) {
-                const cursorPos = editorViewRef.current.state.selection.main.head;
-                handleCursorPositionChanged(cursorPos);
-            }
-        };
-
-        const editorDom = editorViewRef.current.dom;
-        editorDom.addEventListener('focus', handleEditorFocus);
-
-        return () => {
-            editorDom.removeEventListener('focus', handleEditorFocus);
-        };
-    }, [editorViewRef.current, handleCursorPositionChanged]);
-
-    useEffect(() => {
-        if (!editorViewRef.current) return;
-
-        const handleArrowKeys = (event: KeyboardEvent) => {
-            if (
-                event.key === 'ArrowUp' ||
-                event.key === 'ArrowDown' ||
-                event.key === 'ArrowLeft' ||
-                event.key === 'ArrowRight'
-            ) {
                 setTimeout(() => {
                     if (editorViewRef.current) {
                         const cursorPos = editorViewRef.current.state.selection.main.head;
                         handleCursorPositionChanged(cursorPos);
                     }
-                }, 0);
-            }
-        };
+                }, timeout);
+            };
 
-        const editorDom = editorViewRef.current.dom;
-        editorDom.addEventListener('keydown', handleArrowKeys);
+            const editorDom = editorViewRef.current.dom;
 
-        return () => {
-            editorDom.removeEventListener('keydown', handleArrowKeys);
-        };
-    }, [editorViewRef.current, handleCursorPositionChanged]);
+            eventTypes.forEach((eventType) => {
+                editorDom.addEventListener(eventType, handleEditorEvent);
+            });
 
+            return () => {
+                eventTypes.forEach((eventType) => {
+                    editorDom.removeEventListener(eventType, handleEditorEvent);
+                });
+            };
+        },
+        [editorViewRef.current, handleCursorPositionChanged]
+    );
+
+    // Handle keyboard events
+    useEffect(() => {
+        return addEditorEventListeners(['keydown', 'keyup']);
+    }, [addEditorEventListeners]);
+
+    // Handle mouse events
+    useEffect(() => {
+        return addEditorEventListeners(['mouseup', 'mousedown', 'click']);
+    }, [addEditorEventListeners]);
+
+    // Handle focus events
+    useEffect(() => {
+        return addEditorEventListeners(['focus']);
+    }, [addEditorEventListeners]);
+
+    // Handle arrow keys specifically
+    useEffect(() => {
+        const isArrowKey = (event: Event) =>
+            event instanceof KeyboardEvent && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key);
+
+        return addEditorEventListeners(['keydown'], IMMEDIATE_TIMEOUT, isArrowKey);
+    }, [addEditorEventListeners]);
+
+    // Check cursor position at regular intervals
     useEffect(() => {
         if (!editorViewRef.current) return;
 
@@ -552,28 +602,24 @@ export function TextEditor(): React.ReactElement {
             }
         };
 
-        const intervalId = setInterval(checkCursorPosition, 500);
+        const intervalId = setInterval(checkCursorPosition, CURSOR_CHECK_INTERVAL);
 
         return () => {
             clearInterval(intervalId);
         };
     }, [editorViewRef.current, previewRef.current, handleCursorPositionChanged]);
 
-    // Add mouse event listeners to track text selection globally
+    // Add mouse event listeners to track text selection globally with proper typing
     useEffect(() => {
-        const handleMouseDown = () => {
+        const handleMouseDown = (): void => {
             isSelectingRef.current = false;
         };
 
-        const handleMouseUp = () => {
+        const handleMouseUp = (): void => {
             // Short delay to check selection after mouseup
             setTimeout(() => {
-                if (window.getSelection()?.toString()) {
-                    isSelectingRef.current = true;
-                } else {
-                    isSelectingRef.current = false;
-                }
-            }, 10);
+                isSelectingRef.current = !!window.getSelection()?.toString();
+            }, SELECTION_CHECK_TIMEOUT);
         };
 
         document.addEventListener('mousedown', handleMouseDown);
@@ -585,43 +631,45 @@ export function TextEditor(): React.ReactElement {
         };
     }, []);
 
-    const sdgStyles = `
-    .sdg-user-tag {
-        color: #005cc5;
+    // Extract common CSS properties for SDG styling
+    const sdgTagStyle = `
         font-weight: bold;
         padding: 2px 4px;
         border-radius: 4px;
-        background-color: rgba(0, 92, 197, 0.1);
         display: inline-block;
         margin: 4px 0;
+    `;
+
+    const sdgBlockStyle = `
+        padding: 8px 12px;
+        margin: 8px 0;
+        border-radius: 0 4px 4px 0;
+        white-space: pre-wrap;
+    `;
+
+    const sdgStyles = `
+    .sdg-user-tag {
+        color: #005cc5;
+        background-color: rgba(0, 92, 197, 0.1);
+        ${sdgTagStyle}
     }
 
     .sdg-assistant-tag {
         color: #22863a;
-        font-weight: bold;
-        padding: 2px 4px;
-        border-radius: 4px;
         background-color: rgba(34, 134, 58, 0.1);
-        display: inline-block;
-        margin: 4px 0;
+        ${sdgTagStyle}
     }
 
     .sdg-question {
         background-color: rgba(0, 92, 197, 0.1);
         border-left: 3px solid #005cc5;
-        padding: 8px 12px;
-        margin: 8px 0;
-        border-radius: 0 4px 4px 0;
-        white-space: pre-wrap;
+        ${sdgBlockStyle}
     }
 
     .sdg-answer {
         background-color: rgba(34, 134, 58, 0.1);
         border-left: 3px solid #22863a;
-        padding: 8px 12px;
-        margin: 8px 0;
-        border-radius: 0 4px 4px 0;
-        white-space: pre-wrap;
+        ${sdgBlockStyle}
     }
 
     .sdg-document {
@@ -649,13 +697,14 @@ export function TextEditor(): React.ReactElement {
     }
 `;
 
+    // noinspection NestedConditionalExpressionJS
     return (
         <div className="relative flex h-full w-full font-sans">
-            <div className="bg-text-editor-bg flex h-full w-1/3 flex-col border-r-2">
+            <div className="flex h-full w-1/3 flex-col border-r-2 bg-text-editor-bg">
                 <div
                     ref={editorRef}
-                    className="text-text-editor-text flex-1 overflow-hidden font-mono text-sm"
-                    style={{ fontFamily: '"IBM Plex Mono", monospace' }}
+                    className="flex-1 overflow-hidden font-mono text-sm text-text-editor-text"
+                    style={{ fontFamily: FONT_FAMILY }}
                 />
             </div>
 
@@ -671,16 +720,16 @@ export function TextEditor(): React.ReactElement {
                                     <JsonBlock
                                         key={block.index}
                                         index={block.index}
-                                        id={block.data.id}
-                                        messages={block.data.messages}
-                                        metadata={block.data.metadata}
+                                        id={(block as SdgBlock).data.id}
+                                        messages={(block as SdgBlock).data.messages}
+                                        metadata={(block as SdgBlock).data.metadata}
                                         onBlockClick={handleBlockClick}
                                     />
                                 ) : (
                                     <JsonPlainBlock
                                         key={block.index}
                                         index={block.index}
-                                        content={escapeHtml(block.data)}
+                                        content={escapeHtml((block as PlainBlock).data)}
                                         onBlockClick={handleBlockClick}
                                     />
                                 )
