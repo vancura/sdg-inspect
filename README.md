@@ -85,23 +85,56 @@ testing purposes, accessible via the "Example" button.
 
 ```text
 src/
-├── components/           # UI components
-│   ├── App.tsx           # Main application component
-│   ├── Button.tsx        # Reusable button component with Solar icons
-│   ├── Icon.tsx          # Solar icon wrapper component
-│   ├── InputActions.tsx  # Upload and example file buttons
-│   ├── PreviewBlock.tsx     # Formatted JSON block components
-│   └── TextEditor.tsx    # JSONL editor with bidirectional sync
-├── stores/               # Nanostores for state management
-│   └── sdgStore.ts       # Central store for application state
-├── types/                # TypeScript type definitions
-│   └── index.ts          # Core type definitions
-├── utils/                # Utility functions
-│   ├── htmlUtils.ts      # HTML-related utility functions
-│   └── jsonlUtils.ts     # JSONL formatting and highlighting utilities
-├── main.ts               # Main entry point
-└── styles.css            # Global styles
+├── components/              # UI components
+│   ├── App.tsx              # Main application component
+│   ├── Button.tsx           # Reusable button component with Solar icons
+│   ├── EditorPanel.tsx      # CodeMirror editor component
+│   ├── Icon.tsx             # Solar icon wrapper component
+│   ├── InputActions.tsx     # Upload and example file buttons
+│   ├── PreviewBlock.tsx     # Formatted preview block components
+│   ├── PreviewPanel.tsx     # Preview panel for formatted content
+│   └── TextEditor.tsx       # Main editor with bidirectional sync
+├── hooks/                   # Custom React hooks
+│   ├── useContentParser.ts  # Hook for parsing JSONL content
+│   └── useEditorEvents.ts   # Hook for editor event handling
+├── stores/                  # Nanostores for state management
+│   └── sdgStore.ts          # Central store for application state
+├── types/                   # TypeScript type definitions
+│   ├── blockTypes.ts        # Types for preview blocks
+│   ├── editorTypes.ts       # Types for editor components
+│   └── index.ts             # Core type definitions
+├── utils/                   # Utility functions
+│   ├── blockUtils.ts        # Block-related utility functions
+│   ├── editorUtils.ts       # Editor-related utility functions
+│   ├── htmlUtils.ts         # HTML-related utility functions
+│   └── jsonlUtils.ts        # JSONL formatting and highlighting utilities
+├── main.ts                  # Main entry point
+└── styles.css               # Global styles
 ```
+
+## Architecture
+
+The application is built with a modular architecture featuring:
+
+- **Component Separation**: Clear boundaries between the editor, preview, and blocks
+- **Custom Hooks**: Reusable logic extracted into hooks for parser and event handling
+- **Type Safety**: Comprehensive TypeScript interfaces for all components and data structures
+- **State Management**: Centralized state using Nanostores with predictable data flow
+
+### Key Components
+
+- **TextEditor**: Main orchestration component that coordinates between editor and preview
+- **EditorPanel**: Handles CodeMirror setup and interaction
+- **PreviewPanel**: Displays formatted content in a user-friendly way
+- **PreviewBlock**: Renders individual SDG blocks with proper formatting
+
+### Data Flow
+
+1. User input is captured in the editor
+2. Updates flow through the state management
+3. Content is parsed into structured blocks
+4. Preview renders these blocks with appropriate styling
+5. Bidirectional synchronization keeps both views in sync
 
 ## Technologies used
 
