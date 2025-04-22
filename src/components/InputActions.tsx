@@ -5,6 +5,7 @@ import { Button } from './Button.js';
 
 export const RESET_EVENT = 'sdg-inspect-reset';
 
+// noinspection FunctionNamingConventionJS
 /**
  * InputActions component for file upload functionality, and pasting example content.
  *

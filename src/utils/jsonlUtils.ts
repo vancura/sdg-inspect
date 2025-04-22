@@ -70,7 +70,6 @@ export function formatJSONL(content: string): string {
     }
 }
 
-// noinspection FunctionWithMultipleReturnPointsJS
 /**
  * Formats a given line of JSONL text. Parses the input string into a JSON object, optionally processes it, and returns
  * the formatted JSON as a single line string. If the input line is empty or cannot be parsed, the function returns
@@ -121,7 +120,6 @@ function processSDGContent(parsedLine: ISDGData): void {
     processMetadata(parsedLine);
 }
 
-// noinspection FunctionWithMultipleReturnPointsJS
 /**
  * Processes and updates the metadata field of a parsed line object. It parses the metadata as JSON if it is a string,
  * applies formatting to specific fields, and then serializes the metadata back to a string.
@@ -155,7 +153,6 @@ function processMetadata(parsedLine: ISDGData): void {
     }
 }
 
-// noinspection FunctionWithMultipleReturnPointsJS
 /**
  * Highlights the QnA pairs within the given content by replacing the user and assistant markers with stylized HTML tags
  * and applying additional formatting for questions and answers.

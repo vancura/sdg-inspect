@@ -22,6 +22,7 @@ interface IButtonProps {
     readonly className?: string;
 }
 
+// noinspection FunctionNamingConventionJS
 /** Reusable button component with optional Solar icon. */
 export function Button({
     label,

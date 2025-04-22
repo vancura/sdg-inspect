@@ -13,6 +13,7 @@ interface IIconProps {
     className?: string;
 }
 
+// noinspection FunctionNamingConventionJS
 /** Icon component for displaying Solar icons. */
 export function Icon({ icon, size = 24, className = '' }: IIconProps): React.ReactElement {
     return <IconifyIcon icon={`solar:${icon}`} width={size} height={size} className={className} />;
