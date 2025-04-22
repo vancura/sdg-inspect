@@ -1,108 +1,6 @@
 import React, { useCallback, useRef } from 'react';
-
-// Common types and interfaces.
-type BlockType = 'standard' | 'pre';
-
-/** Base props for all block components/ */
-interface IBlockProps {
-    /** The index of the block. */
-    index: number;
-
-    /** The block ID. */
-    blockId?: string;
-
-    /** Function to call when block is clicked. */
-    onBlockClick: (blockId: string) => void;
-
-    /** Block type (standard div or pre). */
-    blockType?: BlockType;
-
-    /** Additional CSS classes. */
-    className?: string;
-
-    /** Block content. */
-    children: React.ReactNode;
-}
-
-/** Props for the JsonBlock component. */
-interface IJsonBlockProps {
-    /** The index of the block. */
-    index: number;
-
-    /** The ID of the block. */
-    id?: string;
-
-    /** The messages of the block. */
-    messages: Array<{
-        /** The content of the message. */
-        content?: string;
-
-        /** The role of the message. */
-        role?: string;
-    }>;
-
-    /** The metadata of the block. */
-    metadata?: string;
-
-    /** Function to call when block is clicked. */
-    onBlockClick: (blockId: string) => void;
-}
-
-/** Props for the JsonPlainBlock component. */
-interface IJsonPlainBlockProps {
-    /** The index of the block. */
-    index: number;
-
-    /** The content of the block. */
-    content: string;
-
-    /** Function to call when block is clicked. */
-    onBlockClick: (blockId: string) => void;
-}
-
-/** Shared utilities. */
-
-/**
- * Creates a block ID from an index.
- *
- * @param index - The block index
- * @returns The formatted block ID
- */
-const getBlockId = (index: number): string => `formatted-line-${index}`;
-
-/**
- * Check if text is currently selected.
- *
- * @returns True if text is selected
- */
-const isTextSelected = (): boolean => !!window.getSelection()?.toString();
-
-/**
- * Strips HTML tags from a string.
- *
- * @param html - The string containing HTML to strip
- * @returns The string with HTML tags removed
- */
-const stripHtmlTags = (html: string): string => {
-    return html.replace(/<\/?[^>]+(?:>|$)/g, '');
-};
-
-/**
- * Parses metadata string to object with error handling.
- *
- * @param metadata - Metadata string to parse
- * @returns Parsed metadata object or null on error
- */
-const parseMetadata = (metadata?: string): Record<string, any> | null => {
-    if (!metadata) return null;
-
-    try {
-        return JSON.parse(metadata);
-    } catch (e) {
-        console.error('Failed to parse metadata:', e);
-        return null;
-    }
-};
+import type { IBlockProps, IJsonBlockProps, IJsonPlainBlockProps } from '../types/blockTypes.js';
+import { getBlockId, isTextSelected, parseMetadata, stripHtmlTags } from '../utils/blockUtils.js';
 
 /** Block component - handles both standard and pre blocks. */
 const Block: React.FC<IBlockProps> = ({
@@ -163,7 +61,6 @@ const Block: React.FC<IBlockProps> = ({
 const MetadataSection: React.FC<{ metadata: Record<string, any> }> = ({ metadata }) => (
     <div className="mt-3 border-t border-dashed border-secondary-sep pt-3">
         <div className="mb-2 text-sm font-medium">Metadata:</div>
-
         {Object.entries(metadata).map(([key, value], i) => (
             <div className="mb-2 text-xs" key={i}>
                 <span className="mb-0.5 mr-2 inline-block font-medium">{key}:</span>
@@ -263,7 +160,7 @@ export const JsonBlock: React.FC<IJsonBlockProps> = ({ index, id, messages, meta
             </div>
 
             <div className="preview-block-highlight:bg-text-editor-bg/90 bg-text-editor-bg/70 p-3 text-black">
-                {messages.map((msg, msgIndex) => {
+                {messages.map((msg: { content?: string; role?: string }, msgIndex: number) => {
                     if (!msg.content) {
                         return null;
                     }
