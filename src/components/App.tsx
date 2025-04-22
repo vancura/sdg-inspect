@@ -2,6 +2,7 @@ import React from 'react';
 import { InputActions } from './InputActions.js';
 import { TextEditor } from './TextEditor.js';
 
+// noinspection FunctionNamingConventionJS
 /** Main App component that composes the application layout. */
 export function App(): React.ReactElement {
     return (

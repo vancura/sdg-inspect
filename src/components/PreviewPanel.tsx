@@ -3,6 +3,7 @@ import type { IPlainBlock, IPreviewPanelProps, ISdgBlock } from '../types/editor
 import { escapeHtml } from '../utils/htmlUtils.js';
 import { PreviewBlock, PreviewPlainBlock, previewBlockStyles, sdgStyles } from './PreviewBlock.js';
 
+// noinspection FunctionNamingConventionJS
 /**
  * PreviewPanel component for displaying formatted JSONL content.
  *

@@ -35,6 +35,7 @@ const {
     SELECTION_CHECK: 10
 };
 
+// noinspection FunctionNamingConventionJS
 /**
  * TextEditor component with CodeMirror for editing and previewing JSONL content.
  *

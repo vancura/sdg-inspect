@@ -5,6 +5,7 @@ import React, { useEffect, useRef } from 'react';
 import type { IEditorPanelProps } from '../types/editorTypes.js';
 import { EditorStyles } from '../types/editorTypes.js';
 
+// noinspection FunctionNamingConventionJS
 /**
  * EditorPanel component for CodeMirror text editing.
  *
