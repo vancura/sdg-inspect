@@ -22,7 +22,6 @@ export function TextEditor(): React.ReactElement {
     const debounceTimerRef = useRef<number | null>(null);
     const currentCursorPositionRef = useRef<number>(0);
     const [currentLine, setCurrentLine] = useState<number>(1);
-    const [debugMessage, setDebugMessage] = useState<string>('');
     const [parsedBlocks, setParsedBlocks] = useState<Array<any>>([]);
     const isSelectingRef = useRef(false);
 
@@ -215,8 +214,6 @@ export function TextEditor(): React.ReactElement {
                         behavior: 'smooth',
                         block: 'start'
                     });
-
-                    setDebugMessage(`Highlighted line ${lineNumber} via cursor position`);
                 }
             }
         },
@@ -315,9 +312,6 @@ export function TextEditor(): React.ReactElement {
             const blockElement = target.closest('.json-block, pre') as HTMLElement | null;
 
             if (blockElement && previewRef.current) {
-                setDebugMessage(`Clicked block: ${blockElement.id}`);
-                console.log('Block clicked:', blockElement.id);
-
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -346,7 +340,7 @@ export function TextEditor(): React.ReactElement {
                     handleCursorPositionChanged(pos);
                 }
             } else {
-                setDebugMessage('No .json-block or pre element found');
+                console.error('No .json-block or pre element found');
             }
         };
 
@@ -354,8 +348,6 @@ export function TextEditor(): React.ReactElement {
         if (previewElement) {
             previewElement.removeEventListener('click', handlePreviewClick as EventListener);
             previewElement.addEventListener('click', handlePreviewClick as EventListener);
-
-            console.log('Click handler attached to preview element');
         }
 
         return () => {
@@ -398,8 +390,6 @@ export function TextEditor(): React.ReactElement {
 
             const element = document.getElementById(blockId);
             if (element && previewRef.current) {
-                setDebugMessage(`Block clicked via handler: ${blockId}`);
-
                 previewRef.current.querySelectorAll('.preview-block-highlight').forEach((el) => {
                     el.classList.remove('preview-block-highlight');
                 });
