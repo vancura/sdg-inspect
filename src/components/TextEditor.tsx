@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { $sdgStore, autoFormatContent, setContent } from '../stores/sdgStore.js';
 import { escapeHtml } from '../utils/htmlUtils.js';
 import { RESET_EVENT } from './InputActions.js';
-import { JsonBlock, jsonBlockStyles, JsonPlainBlock } from './JsonBlock.js';
+import { JsonBlock, jsonBlockStyles, JsonPlainBlock, sdgStyles } from './JsonBlock.js';
 
 // Timing constants
 const IMMEDIATE_TIMEOUT = 0;
@@ -630,72 +630,6 @@ export function TextEditor(): React.ReactElement {
             document.removeEventListener('mouseup', handleMouseUp);
         };
     }, []);
-
-    // Extract common CSS properties for SDG styling
-    const sdgTagStyle = `
-        font-weight: bold;
-        padding: 2px 4px;
-        border-radius: 4px;
-        display: inline-block;
-        margin: 4px 0;
-    `;
-
-    const sdgBlockStyle = `
-        padding: 8px 12px;
-        margin: 8px 0;
-        border-radius: 0 4px 4px 0;
-        white-space: pre-wrap;
-    `;
-
-    const sdgStyles = `
-    .sdg-user-tag {
-        color: #005cc5;
-        background-color: rgba(0, 92, 197, 0.1);
-        ${sdgTagStyle}
-    }
-
-    .sdg-assistant-tag {
-        color: #22863a;
-        background-color: rgba(34, 134, 58, 0.1);
-        ${sdgTagStyle}
-    }
-
-    .sdg-question {
-        background-color: rgba(0, 92, 197, 0.1);
-        border-left: 3px solid #005cc5;
-        ${sdgBlockStyle}
-    }
-
-    .sdg-answer {
-        background-color: rgba(34, 134, 58, 0.1);
-        border-left: 3px solid #22863a;
-        ${sdgBlockStyle}
-    }
-
-    .sdg-document {
-        font-style: italic;
-        background-color: rgba(145, 71, 255, 0.1);
-        border-left: 2px solid #9147ff;
-        padding: 4px 8px;
-        margin: 4px 0;
-        display: block;
-        border-radius: 0 4px 4px 0;
-    }
-
-    .sdg-domain {
-        font-weight: bold;
-        color: #6f42c1;
-        background-color: rgba(111, 66, 193, 0.1);
-        padding: 2px 4px;
-        border-radius: 4px;
-    }
-
-    .json-scroller {
-        overflow-y: auto;
-        scroll-behavior: smooth;
-        height: 100%;
-    }
-`;
 
     // noinspection NestedConditionalExpressionJS
     return (
