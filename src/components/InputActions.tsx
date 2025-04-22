@@ -1,6 +1,5 @@
-import { useStore } from '@nanostores/react';
 import React, { useRef } from 'react';
-import { $sdgStore, autoFormatContent, clearContent, setContent } from '../stores/sdgStore.js';
+import { useSdg } from '../stores/SdgContext.js';
 import { Button } from './Button.js';
 
 export const RESET_EVENT = 'sdg-inspect-reset';
@@ -13,7 +12,7 @@ export const RESET_EVENT = 'sdg-inspect-reset';
  */
 export function InputActions(): React.ReactElement {
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const { content, formattedContent } = useStore($sdgStore);
+    const { content, formattedContent, setContent, autoFormatContent, clearContent } = useSdg();
     const hasContent = Boolean(content.trim() ?? formattedContent.trim());
 
     /**
@@ -123,7 +122,7 @@ export function InputActions(): React.ReactElement {
                     icon="trash-bin-trash-outline"
                     onClick={handleClear}
                     isDisabled={!hasContent}
-                    className="bg-red-600 hover:bg-white focus:ring-red-500 hover:text-red-600"
+                    className="bg-red-600 hover:bg-white hover:text-red-600 focus:ring-red-500"
                 />
             </div>
 

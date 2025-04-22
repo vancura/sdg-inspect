@@ -1,3 +1,4 @@
+import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
 import tailwindcss from 'tailwindcss';
 import { defineConfig } from 'vite';
@@ -38,7 +39,8 @@ export default defineConfig(({ mode }) => ({
 
         // CommonJS dependencies optimization.
         commonjsOptions: {
-            include: []
+            include: [/node_modules/],
+            transformMixedEsModules: true
         },
 
         // Code minification settings.
@@ -76,7 +78,7 @@ export default defineConfig(({ mode }) => ({
 
     // Dependency optimization.
     optimizeDeps: {
-        include: []
+        include: ['react', 'react-dom']
     },
 
     // Asset handling.
@@ -91,8 +93,14 @@ export default defineConfig(({ mode }) => ({
     },
 
     // Plugin configuration.
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     plugins: [
+        react({
+            // Use classic runtime for React 17
+            jsxRuntime: 'classic',
+            babel: {
+                plugins: []
+            }
+        }),
         tailwindcss(),
 
         // Development inspection tool (available at /__inspect/).

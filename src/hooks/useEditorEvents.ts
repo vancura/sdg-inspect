@@ -55,6 +55,11 @@ export function useEditorEvents({
             const handleEditorEvent: EditorEventHandler = (event: Event) => {
                 if (filter && !filter(event)) return;
 
+                // Skip cursor updates for regular typing
+                if (event instanceof KeyboardEvent && !isArrowKey(event) && !event.ctrlKey && !event.metaKey) {
+                    return;
+                }
+
                 window.setTimeout(() => {
                     if (editorViewRef.current) {
                         const cursorPos = editorViewRef.current.state.selection.main.head;
@@ -94,9 +99,6 @@ export function useEditorEvents({
     useEffect(() => {
         // Return combined cleanup function
         const cleanupFunctions = [
-            // Keyboard events
-            addEditorEventListeners(['keydown', 'keyup']),
-
             // Mouse events
             addEditorEventListeners(['mouseup', 'mousedown', 'click']),
 

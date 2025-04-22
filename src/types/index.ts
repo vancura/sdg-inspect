@@ -11,4 +11,7 @@ export interface ISDGInspectState {
 
     /** Any error message to display. */
     error: string | null;
+
+    /** The cursor position in the content. */
+    cursorPosition?: number;
 }

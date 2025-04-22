@@ -51,15 +51,32 @@ export const safeJsonParse = <T>(json: string, fallback: T): T => {
 };
 
 /**
- * Scroll an element into view with smooth behavior.
+ * Scroll an element into view within its scrollable container. Centers the element vertically in the container's
+ * viewport.
  *
  * @param element - The element to scroll into view
  */
 export const scrollElementIntoView = (element: Element): void => {
-    element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-    });
+    const container = element.closest('.preview-scroller');
+    if (!container) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
+    const elementRelativeTop = element.getBoundingClientRect().top - container.getBoundingClientRect().top;
+
+    // Calculate the target scroll position that will center the element
+    const targetScroll =
+        container.scrollTop + // Current scroll position
+        elementRelativeTop - // Element's position relative to container
+        (containerRect.height - elementRect.height) / 2; // Center vertically
+
+    // Only scroll if element is not fully visible
+    if (elementRelativeTop < 0 || elementRelativeTop + elementRect.height > containerRect.height) {
+        container.scrollTo({
+            top: targetScroll,
+            behavior: 'smooth'
+        });
+    }
 };
 
 /**
@@ -71,7 +88,7 @@ export const scrollElementIntoView = (element: Element): void => {
  */
 export const ensureEditorFocus = (editorViewRef: { current: EditorView | null }, timeout = 0): void => {
     window.setTimeout(() => {
-        if (editorViewRef.current) {
+        if (editorViewRef.current && document.activeElement !== editorViewRef.current.dom) {
             editorViewRef.current.focus();
         }
     }, timeout);
@@ -83,7 +100,9 @@ export const ensureEditorFocus = (editorViewRef: { current: EditorView | null },
  * @param previewRef - Reference to the preview container element
  */
 export const clearAllHighlights = (previewRef: RefObject<HTMLDivElement>): void => {
-    previewRef.current.querySelectorAll('.preview-block-highlight').forEach((el) => {
-        el.classList.remove('preview-block-highlight');
-    });
+    if (previewRef.current) {
+        previewRef.current.querySelectorAll('.preview-block-highlight').forEach((el) => {
+            el.classList.remove('preview-block-highlight');
+        });
+    }
 };

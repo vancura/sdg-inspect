@@ -86,12 +86,24 @@ export function EditorPanel({
                         // Handle content changes.
                         if (update.docChanged) {
                             const newContent = update.state.doc.toString();
+                            console.log('[EditorPanel] Content changed:', {
+                                length: newContent.length,
+                                cursorAt: update.state.selection.main.head
+                            });
                             onContentChange(newContent);
                         }
 
-                        // Handle cursor position changes.
-                        const cursorPos = update.state.selection.main.head;
-                        onCursorChange(cursorPos);
+                        // Handle cursor position changes only when selection changes explicitly
+                        if (update.selectionSet) {
+                            const cursorPos = update.state.selection.main.head;
+                            console.log('[EditorPanel] Selection changed:', {
+                                position: cursorPos,
+                                docChanged: update.docChanged,
+                                selectionSet: update.selectionSet,
+                                changes: update.changes.toJSON()
+                            });
+                            onCursorChange(cursorPos);
+                        }
                     })
                 ]
             });

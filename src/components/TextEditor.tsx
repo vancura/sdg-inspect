@@ -1,9 +1,8 @@
 import { EditorView } from '@codemirror/view';
-import { useStore } from '@nanostores/react';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useContentParser } from '../hooks/useContentParser.js';
 import { useEditorEvents } from '../hooks/useEditorEvents.js';
-import { $sdgStore, autoFormatContent, setContent } from '../stores/sdgStore.js';
+import { useSdg } from '../stores/SdgContext.js';
 import type { TypedEventListener } from '../types/editorTypes.js';
 import { isTextSelected } from '../utils/blockUtils.js';
 import {
@@ -43,7 +42,7 @@ const {
  * right panel with bidirectional highlighting.
  */
 export function TextEditor(): React.ReactElement {
-    const { content, formattedContent } = useStore($sdgStore);
+    const { content, formattedContent, setContent, autoFormatContent } = useSdg();
     const { parsedBlocks, parseFormattedContent } = useContentParser();
 
     // Refs for element access and state tracking.
@@ -56,7 +55,7 @@ export function TextEditor(): React.ReactElement {
 
     // Utility functions.
     const ensureEditorFocusWithTimeout = useCallback((timeout = IMMEDIATE_TIMEOUT) => {
-        if (editorViewRef.current) {
+        if (editorViewRef.current && document.activeElement !== editorViewRef.current.dom) {
             ensureEditorFocus(editorViewRef, timeout);
         }
     }, []);
@@ -78,6 +77,11 @@ export function TextEditor(): React.ReactElement {
             if (!editorViewRef.current) {
                 return;
             }
+
+            console.log('[TextEditor] Cursor position changed:', {
+                position: pos,
+                line: editorViewRef.current.state.doc.lineAt(pos).number
+            });
 
             const line = editorViewRef.current.state.doc.lineAt(pos);
             const lineNumber = line.number;
@@ -108,29 +112,46 @@ export function TextEditor(): React.ReactElement {
 
     // Content change handling with debouncing.
     const debouncedFormatContent = useCallback(() => {
+        if (!content.trim()) return;
+
+        console.log('[TextEditor] Debouncing format:', {
+            contentLength: content.length,
+            cursorAt: editorViewRef.current?.state.selection.main.head
+        });
+
         clearTimeoutSafe(debounceTimerRef);
-
         debounceTimerRef.current = window.setTimeout(() => {
-            if (content.trim()) {
-                if (editorViewRef.current) {
-                    currentCursorPositionRef.current = editorViewRef.current.state.selection.main.head;
-                }
+            const currentPos = editorViewRef.current?.state.selection.main.head ?? 0;
+            console.log('[TextEditor] Formatting content:', {
+                cursorBefore: currentPos
+            });
 
-                autoFormatContent();
+            autoFormatContent(currentPos);
+
+            // Restore cursor position and focus
+            if (editorViewRef.current) {
+                editorViewRef.current.focus();
             }
+
+            console.log('[TextEditor] Content formatted:', {
+                cursorAfter: editorViewRef.current?.state.selection.main.head
+            });
             debounceTimerRef.current = null;
         }, LONG_TIMEOUT);
-    }, [content]);
+    }, [content, autoFormatContent]);
 
     const handleContentChange = useCallback(
         (newContent: string) => {
+            console.log('[TextEditor] Content changing:', {
+                oldLength: content.length,
+                newLength: newContent.length,
+                cursorAt: editorViewRef.current?.state.selection.main.head
+            });
+
             if (newContent !== content) {
                 setContent(newContent);
-
                 if (newContent.trim()) {
                     debouncedFormatContent();
-                } else {
-                    setTimeout(() => autoFormatContent(), IMMEDIATE_TIMEOUT);
                 }
             }
         },
@@ -276,16 +297,6 @@ export function TextEditor(): React.ReactElement {
     // Add event listener for RESET_EVENT.
     useEffect(() => {
         const handleReset = (): void => {
-            if (editorViewRef.current) {
-                editorViewRef.current.dispatch({
-                    changes: {
-                        from: 0,
-                        to: editorViewRef.current.state.doc.length,
-                        insert: ''
-                    }
-                });
-            }
-
             clearAllHighlightsInPreview();
         };
 
@@ -317,11 +328,15 @@ export function TextEditor(): React.ReactElement {
                     block.setAttribute('data-source-line', (index + 1).toString());
                     block.id = `formatted-line-${index}`;
                 });
-            }, MEDIUM_TIMEOUT);
 
-            // Update cursor position after content changes.
-            setTimeout(() => {
-                handleCursorPositionChanged(currentCursorPositionRef.current);
+                // Restore cursor position from state without scrolling
+                if (editorViewRef.current) {
+                    const pos = currentCursorPositionRef.current;
+                    editorViewRef.current.dispatch({
+                        selection: { anchor: pos, head: pos },
+                        scrollIntoView: false
+                    });
+                }
             }, MEDIUM_TIMEOUT);
 
             return () => {
@@ -330,7 +345,7 @@ export function TextEditor(): React.ReactElement {
         }
 
         return undefined;
-    }, [formattedContent, handleCursorPositionChanged, parseFormattedContent]);
+    }, [formattedContent, parseFormattedContent]);
 
     // Check cursor position at regular intervals.
     useEffect(() => {
@@ -350,7 +365,10 @@ export function TextEditor(): React.ReactElement {
                         sourceElement &&
                         (!highlightedElement || !sourceElement.classList.contains('preview-block-highlight'))
                     ) {
-                        handleCursorPositionChanged(cursorPos);
+                        clearAllHighlightsInPreview();
+                        sourceElement.classList.add('preview-block-highlight');
+                        // Only scroll the preview panel, not the editor
+                        scrollElementIntoView(sourceElement);
                     }
                 }
             }
@@ -361,7 +379,7 @@ export function TextEditor(): React.ReactElement {
         return () => {
             clearIntervalSafe(intervalId);
         };
-    }, [editorViewRef.current, previewRef.current, handleCursorPositionChanged]);
+    }, [editorViewRef.current, previewRef.current, clearAllHighlightsInPreview]);
 
     // Track text selection globally.
     useEffect(() => {

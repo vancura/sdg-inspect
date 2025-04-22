@@ -11,6 +11,7 @@ and analyze SDG files.
 - Format SDG JSONL content with syntax highlighting for Q&A pairs
 - Visually distinguishable user/assistant interactions with color-coding
 - Interactive highlighting with bidirectional sync between editor and preview
+- Smart scrolling with element centering in preview panel
 - Clear functionality with complete state reset
 
 ## Setup
@@ -41,7 +42,7 @@ yarn preview
 4. **View the highlighted SDG content** with color-coded user/assistant
    interactions in the preview panel on the right
 5. **Navigate between views** by clicking on content in either panel, which automatically
-   synchronizes the position in both views
+   synchronizes the position in both views and centers the content
 6. **Clear the editor** using the red trash button to start over
 
 ### SDG JSONL format support
@@ -64,7 +65,7 @@ The application is designed specifically for SDG JSONL files with this structure
     - Proper metadata formatting with purple accents for SDG documents and domains
 - Question/Answer pairs are clearly distinguished with different background colors and borders
 - Clicking on an entry in either panel highlights and scrolls to the
-  corresponding content in the other panel
+  corresponding content in the other panel, centering it in view
 - The active line in the editor is highlighted with a light background
 - Clear completely resets the editor to its initial state
 
@@ -72,21 +73,15 @@ The application is designed specifically for SDG JSONL files with this structure
 
 1. Navigate through the editor using standard keyboard shortcuts
 2. As the cursor moves in the editor, the corresponding block in the preview
-   panel is highlighted
+   panel is highlighted and smoothly scrolled into view
 3. Clicking on a block in the preview panel positions the cursor at the
-   corresponding line in the editor
-
-#### Example JSONL file
-
-The repository includes an `example.jsonl` file in the public directory for
-testing purposes, accessible via the "Example" button.
+   corresponding line in the editor and centers the block
 
 ## Project structure
 
 ```text
 src/
 ├── components/              # UI components
-│   ├── App.tsx              # Main application component
 │   ├── Button.tsx           # Reusable button component with Solar icons
 │   ├── EditorPanel.tsx      # CodeMirror editor component
 │   ├── Icon.tsx             # Solar icon wrapper component
@@ -98,6 +93,7 @@ src/
 │   ├── useContentParser.ts  # Hook for parsing JSONL content
 │   └── useEditorEvents.ts   # Hook for editor event handling
 ├── stores/                  # Nanostores for state management
+│   ├── SdgContext.tsx       # React context for SDG state
 │   └── sdgStore.ts          # Central store for application state
 ├── types/                   # TypeScript type definitions
 │   ├── blockTypes.ts        # Types for preview blocks
@@ -119,22 +115,24 @@ The application is built with a modular architecture featuring:
 - **Component Separation**: Clear boundaries between the editor, preview, and blocks
 - **Custom Hooks**: Reusable logic extracted into hooks for parser and event handling
 - **Type Safety**: Comprehensive TypeScript interfaces for all components and data structures
-- **State Management**: Centralized state using Nanostores with predictable data flow
+- **State Management**: Centralized state using Nanostores with React Context integration
+- **Smart Scrolling**: Intelligent scroll position management with element centering
 
 ### Key Components
 
 - **TextEditor**: Main orchestration component that coordinates between editor and preview
 - **EditorPanel**: Handles CodeMirror setup and interaction
-- **PreviewPanel**: Displays formatted content in a user-friendly way
+- **PreviewPanel**: Displays formatted content with smart scrolling
 - **PreviewBlock**: Renders individual SDG blocks with proper formatting
 
 ### Data Flow
 
 1. User input is captured in the editor
-2. Updates flow through the state management
+2. Updates flow through the state management system
 3. Content is parsed into structured blocks
 4. Preview renders these blocks with appropriate styling
 5. Bidirectional synchronization keeps both views in sync
+6. Smart scrolling ensures optimal content visibility
 
 ## Technologies used
 
@@ -142,7 +140,7 @@ The application is built with a modular architecture featuring:
 - **TypeScript**: Strictly typed code for better maintainability
 - **React**: Component-based UI library
 - **Tailwind CSS**: Utility-first CSS framework for styling
-- **Nanostores**: Lightweight state management
+- **Nanostores**: Lightweight state management with React Context integration
 - **Solar Icons**: Modern icon set via Iconify integration
 - **CodeMirror 6**: Advanced code editor with syntax highlighting
 - **IBM Plex Fonts**: Sans and Mono fonts for clean typography

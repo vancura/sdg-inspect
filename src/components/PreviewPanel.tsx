@@ -19,7 +19,7 @@ export function PreviewPanel({
     if (!formattedContent) {
         return (
             <div className="flex h-full items-center justify-center p-4 pt-16">
-                <div className="text-secondary-text">Preview will appear here when content is entered</div>
+                <div className="select-none text-secondary-text">Preview will appear here when content is entered</div>
             </div>
         );
     }

@@ -4,7 +4,7 @@
 /* eslint-env browser */
 
 import React from 'react';
-import { createRoot } from 'react-dom/client';
+import ReactDOM from 'react-dom';
 
 import { App } from './components/App.js';
 import './styles.css';
@@ -12,10 +12,10 @@ import './styles.css';
 const root = window.document.getElementById('app');
 
 if (root) {
-    createRoot(root).render(React.createElement(App));
+    ReactDOM.render(React.createElement(App), root);
 } else {
     const appDiv = window.document.createElement('div');
     appDiv.id = 'app';
     window.document.body.appendChild(appDiv);
-    createRoot(appDiv).render(React.createElement(App));
+    ReactDOM.render(React.createElement(App), appDiv);
 }
