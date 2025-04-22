@@ -4,46 +4,49 @@ import { EditorView, highlightActiveLine, keymap, ViewUpdate } from '@codemirror
 import { useStore } from '@nanostores/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { $sdgStore, autoFormatContent, setContent } from '../stores/sdgStore.js';
+import type {
+    EditorEventHandler,
+    IParsedBlock,
+    IPlainBlock,
+    ISdgBlock,
+    TypedEventListener
+} from '../types/editorTypes.js';
+import { isTextSelected } from '../utils/blockUtils.js';
+import {
+    clearAllHighlights,
+    clearIntervalSafe,
+    clearTimeoutSafe,
+    ensureEditorFocus,
+    getElementByIdSafe,
+    safeJsonParse,
+    scrollElementIntoView
+} from '../utils/editorUtils.js';
 import { escapeHtml } from '../utils/htmlUtils.js';
 import { RESET_EVENT } from './InputActions.js';
 import { JsonBlock, jsonBlockStyles, JsonPlainBlock, sdgStyles } from './JsonBlock.js';
 
-// Timing constants
-const IMMEDIATE_TIMEOUT = 0;
-const SHORT_TIMEOUT = 5;
-const MEDIUM_TIMEOUT = 50;
-const LONG_TIMEOUT = 300;
-const CURSOR_CHECK_INTERVAL = 500;
-const SELECTION_CHECK_TIMEOUT = 10;
+// Import constants from editorTypes
+const {
+    IMMEDIATE: IMMEDIATE_TIMEOUT,
+    SHORT: SHORT_TIMEOUT,
+    MEDIUM: MEDIUM_TIMEOUT,
+    LONG: LONG_TIMEOUT,
+    CURSOR_CHECK_INTERVAL,
+    SELECTION_CHECK: SELECTION_CHECK_TIMEOUT
+} = {
+    IMMEDIATE: 0,
+    SHORT: 5,
+    MEDIUM: 50,
+    LONG: 300,
+    CURSOR_CHECK_INTERVAL: 500,
+    SELECTION_CHECK: 10
+};
 
-// Editor style constants
-const FONT_FAMILY = '"IBM Plex Mono", monospace';
-const FONT_FAMILY_IMPORTANT = `${FONT_FAMILY} !important`;
-
-// Type definitions for parsed content
-interface ParsedBlock {
-    type: 'sdg' | 'plain';
-    data: any;
-    index: number;
-}
-
-interface SdgBlock extends ParsedBlock {
-    type: 'sdg';
-    data: {
-        id: string;
-        messages: Array<any>;
-        metadata?: any;
-    };
-}
-
-interface PlainBlock extends ParsedBlock {
-    type: 'plain';
-    data: string;
-}
-
-// Type for event handlers
-type EditorEventHandler = (event: Event) => void;
-type TypedEventListener<K extends keyof HTMLElementEventMap> = (event: HTMLElementEventMap[K]) => void;
+// Import style constants
+const { FONT_FAMILY, FONT_FAMILY_IMPORTANT } = {
+    FONT_FAMILY: '"IBM Plex Mono", monospace',
+    FONT_FAMILY_IMPORTANT: '"IBM Plex Mono", monospace !important'
+};
 
 // noinspection FunctionNamingConventionJS
 /**
@@ -60,44 +63,14 @@ export function TextEditor(): React.ReactElement {
     const debounceTimerRef = useRef<number | null>(null);
     const currentCursorPositionRef = useRef<number>(0);
     const currentLineRef = useRef<number>(1);
-    const [parsedBlocks, setParsedBlocks] = useState<Array<ParsedBlock>>([]);
+    const [parsedBlocks, setParsedBlocks] = useState<Array<IParsedBlock>>([]);
     const isSelectingRef = useRef(false);
 
-    // Check if text is currently selected
-    const isTextSelected = useCallback((): boolean => {
-        return isSelectingRef.current || !!window.getSelection()?.toString();
+    const ensureEditorFocusWithTimeout = useCallback((timeout = IMMEDIATE_TIMEOUT) => {
+        ensureEditorFocus(editorViewRef, timeout);
     }, []);
 
-    const ensureEditorFocus = useCallback((timeout = IMMEDIATE_TIMEOUT) => {
-        setTimeout(() => {
-            if (editorViewRef.current) {
-                editorViewRef.current.focus();
-            }
-        }, timeout);
-    }, []);
-
-    // Clear any active timeout safely
-    const clearTimeout = useCallback((timerRef: React.MutableRefObject<number | null>) => {
-        if (timerRef.current !== null) {
-            window.clearTimeout(timerRef.current);
-            timerRef.current = null;
-        }
-    }, []);
-
-    // Clear any active interval safely
-    const clearInterval = useCallback((intervalRef: ReturnType<typeof window.setInterval>) => {
-        if (intervalRef) {
-            window.clearInterval(intervalRef);
-        }
-    }, []);
-
-    // Safely get element by ID with type checking
-    const getElementById = useCallback<(id: string) => HTMLElement | null>((id: string) => {
-        const element = document.getElementById(id);
-        return element;
-    }, []);
-
-    // noinspection FunctionWithInconsistentReturnsJS,FunctionWithMultipleReturnPointsJS
+    // noinspection FunctionWithMultipleReturnPointsJS
     useEffect(() => {
         if (!editorRef.current) {
             return;
@@ -116,7 +89,7 @@ export function TextEditor(): React.ReactElement {
                     selection: { anchor: Math.min(currentPos, content.length) }
                 });
 
-                ensureEditorFocus();
+                ensureEditorFocusWithTimeout();
             }
         } else {
             const state = EditorState.create({
@@ -188,10 +161,10 @@ export function TextEditor(): React.ReactElement {
                 editorViewRef.current = null;
             }
         };
-    }, [content, editorRef.current, ensureEditorFocus]);
+    }, [content, editorRef.current, ensureEditorFocusWithTimeout]);
 
     const debouncedFormatContent = useCallback(() => {
-        clearTimeout(debounceTimerRef);
+        clearTimeoutSafe(debounceTimerRef);
 
         debounceTimerRef.current = window.setTimeout(() => {
             if (content.trim()) {
@@ -203,7 +176,7 @@ export function TextEditor(): React.ReactElement {
             }
             debounceTimerRef.current = null;
         }, LONG_TIMEOUT);
-    }, [content, clearTimeout]);
+    }, [content]);
 
     const handleContentChange = useCallback(
         (newContent: string) => {
@@ -231,22 +204,20 @@ export function TextEditor(): React.ReactElement {
                                 selection: { anchor: newPos }
                             });
 
-                            ensureEditorFocus();
+                            ensureEditorFocusWithTimeout();
                         }
                     }, IMMEDIATE_TIMEOUT);
                 }
             }
         },
-        [content, debouncedFormatContent, ensureEditorFocus]
+        [content, debouncedFormatContent, ensureEditorFocusWithTimeout]
     );
 
-    const clearAllHighlights = useCallback(() => {
+    const clearAllHighlightsInPreview = useCallback(() => {
         if (previewRef.current) {
-            previewRef.current.querySelectorAll('.preview-block-highlight').forEach((el) => {
-                el.classList.remove('preview-block-highlight');
-            });
+            clearAllHighlights(previewRef as React.RefObject<HTMLDivElement>);
         }
-    }, [previewRef.current]);
+    }, [previewRef]);
 
     // noinspection FunctionWithMultipleReturnPointsJS
     const getLineStartPosition = useCallback((lineIndex: number): number => {
@@ -264,13 +235,6 @@ export function TextEditor(): React.ReactElement {
         }
     }, []);
 
-    const scrollElementIntoView = useCallback((element: Element) => {
-        element.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-        });
-    }, []);
-
     // noinspection FunctionWithMultipleReturnPointsJS
     const handleCursorPositionChanged = useCallback(
         (pos: number) => {
@@ -284,7 +248,7 @@ export function TextEditor(): React.ReactElement {
             currentLineRef.current = lineNumber;
 
             if (previewRef.current) {
-                clearAllHighlights();
+                clearAllHighlightsInPreview();
 
                 const sourceElement = previewRef.current.querySelector(`[data-source-line="${lineNumber}"]`);
                 if (sourceElement) {
@@ -293,7 +257,7 @@ export function TextEditor(): React.ReactElement {
                 }
             }
         },
-        [previewRef.current, clearAllHighlights, scrollElementIntoView]
+        [previewRef.current, clearAllHighlightsInPreview]
     );
 
     // noinspection FunctionWithMultipleReturnPointsJS
@@ -321,16 +285,6 @@ export function TextEditor(): React.ReactElement {
         return undefined;
     }, [formattedContent]);
 
-    // Add error handling for JSON parsing
-    const safeJsonParse = useCallback(<T,>(json: string, fallback: T): T => {
-        try {
-            return JSON.parse(json);
-        } catch (error) {
-            console.error('Error parsing JSON:', error);
-            return fallback;
-        }
-    }, []);
-
     // Parse the formatted content into structured blocks
     const parseFormattedContent = (content: string): void => {
         if (!content) {
@@ -338,7 +292,7 @@ export function TextEditor(): React.ReactElement {
             return;
         }
 
-        const blocks = content.split('\n').map((line, index): ParsedBlock => {
+        const blocks = content.split('\n').map((line, index): IParsedBlock => {
             try {
                 const obj = safeJsonParse<any>(line, null);
                 if (obj && obj.messages && Array.isArray(obj.messages)) {
@@ -346,19 +300,19 @@ export function TextEditor(): React.ReactElement {
                         type: 'sdg',
                         data: obj,
                         index
-                    } as SdgBlock;
+                    } as ISdgBlock;
                 }
                 return {
                     type: 'plain',
                     data: line,
                     index
-                } as PlainBlock;
+                } as IPlainBlock;
             } catch {
                 return {
                     type: 'plain',
                     data: line,
                     index
-                } as PlainBlock;
+                } as IPlainBlock;
             }
         });
 
@@ -403,7 +357,7 @@ export function TextEditor(): React.ReactElement {
             }
 
             // Clear existing highlights
-            clearAllHighlights();
+            clearAllHighlightsInPreview();
 
             // Add highlight to the element
             element.classList.add('preview-block-highlight');
@@ -420,21 +374,19 @@ export function TextEditor(): React.ReactElement {
                     selection: { anchor: pos, head: pos }
                 });
 
-                ensureEditorFocus();
+                ensureEditorFocusWithTimeout();
                 scrollEditorToLine(lineIndex + 1);
                 handleCursorPositionChanged(pos);
             }
         },
         [
             previewRef.current,
-            isTextSelected,
             editorViewRef.current,
             getLineStartPosition,
             scrollEditorToLine,
             handleCursorPositionChanged,
-            clearAllHighlights,
-            scrollElementIntoView,
-            ensureEditorFocus
+            clearAllHighlightsInPreview,
+            ensureEditorFocusWithTimeout
         ]
     );
 
@@ -468,7 +420,7 @@ export function TextEditor(): React.ReactElement {
                 previewElement.removeEventListener('click', handlePreviewClick);
             }
         };
-    }, [previewRef.current, syncElementWithEditor, isTextSelected]);
+    }, [previewRef.current, syncElementWithEditor]);
 
     useEffect(() => {
         const handleReset = (): void => {
@@ -482,16 +434,16 @@ export function TextEditor(): React.ReactElement {
                 });
             }
 
-            clearAllHighlights();
+            clearAllHighlightsInPreview();
         };
 
         document.addEventListener(RESET_EVENT, handleReset);
 
         return () => {
             document.removeEventListener(RESET_EVENT, handleReset);
-            clearTimeout(debounceTimerRef);
+            clearTimeoutSafe(debounceTimerRef);
         };
-    }, [clearAllHighlights, clearTimeout]);
+    }, [clearAllHighlightsInPreview]);
 
     // noinspection FunctionWithMultipleReturnPointsJS
     const handleBlockClick = useCallback(
@@ -500,12 +452,12 @@ export function TextEditor(): React.ReactElement {
                 return;
             }
 
-            const element = getElementById(blockId);
+            const element = getElementByIdSafe(blockId);
             if (element && previewRef.current) {
                 syncElementWithEditor(element);
             }
         },
-        [syncElementWithEditor, isTextSelected, getElementById]
+        [syncElementWithEditor]
     );
 
     useEffect(() => {
@@ -605,7 +557,7 @@ export function TextEditor(): React.ReactElement {
         const intervalId = setInterval(checkCursorPosition, CURSOR_CHECK_INTERVAL);
 
         return () => {
-            clearInterval(intervalId);
+            clearIntervalSafe(intervalId);
         };
     }, [editorViewRef.current, previewRef.current, handleCursorPositionChanged]);
 
@@ -654,16 +606,16 @@ export function TextEditor(): React.ReactElement {
                                     <JsonBlock
                                         key={block.index}
                                         index={block.index}
-                                        id={(block as SdgBlock).data.id}
-                                        messages={(block as SdgBlock).data.messages}
-                                        metadata={(block as SdgBlock).data.metadata}
+                                        id={(block as ISdgBlock).data.id}
+                                        messages={(block as ISdgBlock).data.messages}
+                                        metadata={(block as ISdgBlock).data.metadata}
                                         onBlockClick={handleBlockClick}
                                     />
                                 ) : (
                                     <JsonPlainBlock
                                         key={block.index}
                                         index={block.index}
-                                        content={escapeHtml((block as PlainBlock).data)}
+                                        content={escapeHtml((block as IPlainBlock).data)}
                                         onBlockClick={handleBlockClick}
                                     />
                                 )

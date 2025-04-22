@@ -1,5 +1,3 @@
-/** Utility functions for working with text blocks. */
-
 /**
  * Creates a block ID from an index.
  *
