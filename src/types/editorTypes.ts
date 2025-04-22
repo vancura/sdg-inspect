@@ -46,27 +46,6 @@ export type EditorEventHandler = (event: Event) => void;
 /** Type for HTML element event listeners with proper typing. */
 export type TypedEventListener<K extends keyof HTMLElementEventMap> = (event: HTMLElementEventMap[K]) => void;
 
-/** Editor timing constants. */
-export const EditorTimings = {
-    /** Immediate execution (0ms). */
-    IMMEDIATE: 0,
-
-    /** Short delay (5ms). */
-    SHORT: 5,
-
-    /** Medium delay (50ms). */
-    MEDIUM: 50,
-
-    /** Long delay (300ms). */
-    LONG: 300,
-
-    /** Cursor position check interval (500ms). */
-    CURSOR_CHECK_INTERVAL: 500,
-
-    /** Selection check timeout (10ms). */
-    SELECTION_CHECK: 10
-} as const;
-
 /** Editor style constants. */
 export const EditorStyles = {
     /** Base font family. */
@@ -75,21 +54,6 @@ export const EditorStyles = {
     /** Font family with !important flag. */
     FONT_FAMILY_IMPORTANT: '"IBM Plex Mono", monospace !important'
 } as const;
-
-/** Type for editor sync functions. */
-export interface IEditorSyncFunctions {
-    /** Function to sync preview element with editor. */
-    syncElementWithEditor: (element: HTMLElement) => void;
-
-    /** Function to scroll editor to a specific line. */
-    scrollEditorToLine: (lineNumber: number) => void;
-
-    /** Function to get line start position for navigation. */
-    getLineStartPosition: (lineIndex: number) => number;
-
-    /** Function to handle cursor position changes. */
-    handleCursorPositionChanged: (position: number) => void;
-}
 
 /** Props for the EditorPanel component. */
 export interface IEditorPanelProps {
