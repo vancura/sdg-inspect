@@ -25,14 +25,17 @@ interface IEditorEventsOptions {
  * Hook for managing editor events.
  *
  * @param options - Editor events configuration.
+ * @param options.editorViewRef - Editor view reference.
+ * @param options.onCursorChange - Handler for cursor position change.
+ * @param options.defaultTimeout - Timeout delay for event handling.
+ * @param options.immediateTimeout - Immediate timeout value.
  * @returns Functions for setting up events.
  */
 export function useEditorEvents({
     editorViewRef,
     onCursorChange,
     defaultTimeout = 5,
-    immediateTimeout = 0,
-    cursorCheckInterval = 500
+    immediateTimeout = 0
 }: IEditorEventsOptions) {
     /**
      * Attach event listeners to the editor.
